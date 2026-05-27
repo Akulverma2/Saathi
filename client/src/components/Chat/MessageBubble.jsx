@@ -2,11 +2,13 @@ import { useTranslation } from 'react-i18next';
 import { useVoice } from '../../hooks/useVoice';
 import { useAuth } from '../../contexts/AuthContext';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function MessageBubble({ message }) {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { speak, isSupported } = useVoice(i18n.language);
+  const navigate = useNavigate();
   const isUser = message.role === 'user';
 
   // Auto-read aloud if user prefers voice and it's a new assistant message
@@ -21,6 +23,149 @@ export default function MessageBubble({ message }) {
   }, [message, isUser, user?.voice_preference, isSupported, speak]);
 
   const timeString = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // Detect wellness suggestions in assistant messages and generate a beautiful action CTA button
+  let activityButton = null;
+  if (!isUser) {
+    const lowerContent = message.content.toLowerCase();
+    
+    if (lowerContent.includes('breathing') || lowerContent.includes('सांस')) {
+      activityButton = (
+        <button 
+          onClick={() => navigate('/wellness?start=breathing')}
+          style={{
+            background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))',
+            color: 'white',
+            border: 'none',
+            padding: '6px 14px',
+            borderRadius: '16px',
+            fontSize: '0.78rem',
+            fontWeight: '600',
+            marginTop: '8px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(79,139,122,0.25)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'transform 0.2s',
+            outline: 'none'
+          }}
+          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          🌬️ Start Breathing Exercise
+        </button>
+      );
+    } else if (lowerContent.includes('journal') || lowerContent.includes('डायरी') || lowerContent.includes('लिखना')) {
+      activityButton = (
+        <button 
+          onClick={() => navigate('/wellness?start=journal')}
+          style={{
+            background: 'linear-gradient(135deg, var(--color-secondary-500), var(--color-secondary-600))',
+            color: 'white',
+            border: 'none',
+            padding: '6px 14px',
+            borderRadius: '16px',
+            fontSize: '0.78rem',
+            fontWeight: '600',
+            marginTop: '8px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(200,150,100,0.25)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'transform 0.2s',
+            outline: 'none'
+          }}
+          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          📓 Open Guided Journal
+        </button>
+      );
+    } else if (lowerContent.includes('grounding') || lowerContent.includes('5-4-3-2-1')) {
+      activityButton = (
+        <button 
+          onClick={() => navigate('/wellness?start=grounding')}
+          style={{
+            background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500))',
+            color: 'white',
+            border: 'none',
+            padding: '6px 14px',
+            borderRadius: '16px',
+            fontSize: '0.78rem',
+            fontWeight: '600',
+            marginTop: '8px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(79,139,122,0.2)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'transform 0.2s',
+            outline: 'none'
+          }}
+          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          🌿 Start Grounding Exercise
+        </button>
+      );
+    } else if (lowerContent.includes('relaxation') || lowerContent.includes('रिलैक्सेशन') || lowerContent.includes('body')) {
+      activityButton = (
+        <button 
+          onClick={() => navigate('/wellness?start=relaxation')}
+          style={{
+            background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+            color: 'white',
+            border: 'none',
+            padding: '6px 14px',
+            borderRadius: '16px',
+            fontSize: '0.78rem',
+            fontWeight: '600',
+            marginTop: '8px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(99,102,241,0.25)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'transform 0.2s',
+            outline: 'none'
+          }}
+          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          ✨ Start Body Relaxation
+        </button>
+      );
+    } else if (lowerContent.includes('sleep') || lowerContent.includes('सोने') || lowerContent.includes('wind-down')) {
+      activityButton = (
+        <button 
+          onClick={() => navigate('/wellness?start=sleep')}
+          style={{
+            background: 'linear-gradient(135deg, #312e81, #1e1b4b)',
+            color: 'white',
+            border: 'none',
+            padding: '6px 14px',
+            borderRadius: '16px',
+            fontSize: '0.78rem',
+            fontWeight: '600',
+            marginTop: '8px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(49,46,129,0.25)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'transform 0.2s',
+            outline: 'none'
+          }}
+          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          🌙 Start Sleep Wind-Down
+        </button>
+      );
+    }
+  }
 
   return (
     <div className={`message-row ${isUser ? 'user' : 'assistant'}`}>
@@ -38,7 +183,8 @@ export default function MessageBubble({ message }) {
       
       <div className="flex-col" style={isUser ? { alignItems: 'flex-end' } : { alignItems: 'flex-start' }}>
         <div className={`message-bubble ${isUser ? 'user' : 'assistant'}`}>
-          {message.content}
+          <div>{message.content}</div>
+          {activityButton}
         </div>
         
         <div className="flex items-center gap-2 mt-1">

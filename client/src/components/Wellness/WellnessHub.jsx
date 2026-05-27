@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { api } from '../../services/apiClient';
 import BreathingExercise from './BreathingExercise';
 import JournalActivity from './JournalActivity';
@@ -12,6 +13,21 @@ export default function WellnessHub() {
   const { t, i18n } = useTranslation();
   const [activities, setActivities] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (activities.length > 0) {
+      const params = new URLSearchParams(location.search);
+      const startId = params.get('start') || location.state?.start;
+      if (startId) {
+        const found = activities.find(a => a.id === startId || a.type === startId || a.id.includes(startId));
+        if (found) {
+          setActiveSession(found);
+        }
+      }
+    }
+  }, [activities, location]);
+
 
   useEffect(() => {
     const fetchActivities = async () => {

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/apiClient';
 import { saveMessage, getMessages, getUnsyncedMessages, markMessageSynced } from '../services/db';
 
@@ -9,6 +10,7 @@ export function useChat(language = 'en') {
   const [crisisLevel, setCrisisLevel] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const bottomRef = useRef(null);
+  const navigate = useNavigate();
 
   // Load history from IndexedDB on mount
   useEffect(() => {
@@ -43,6 +45,40 @@ export function useChat(language = 'en') {
 
   const sendMessage = useCallback(async (content) => {
     if (!content.trim() || loading) return;
+
+    const lowerContent = content.trim().toLowerCase();
+    
+    // Check if user is replying affirmatively to a wellness suggestion from the assistant
+    const isAffirmative = ['yes', 'yep', 'ok', 'sure', 'yeah', 'please', 'haan', 'हाँ', 'जी', 'जी हाँ', 'ok structure', 'ok routine'].some(aff => 
+      lowerContent === aff || 
+      lowerContent.includes(' ' + aff) || 
+      lowerContent.startsWith(aff + ' ')
+    );
+
+    if (isAffirmative && messages.length > 0) {
+      const assistantMsgs = [...messages].reverse().filter(m => m.role === 'assistant');
+      if (assistantMsgs.length > 0) {
+        const lastContent = assistantMsgs[0].content.toLowerCase();
+        let targetActivity = null;
+
+        if (lastContent.includes('breathing') || lastContent.includes('सांस')) {
+          targetActivity = 'breathing';
+        } else if (lastContent.includes('journal') || lastContent.includes('डायरी') || lastContent.includes('लिखना')) {
+          targetActivity = 'journal';
+        } else if (lastContent.includes('grounding') || lastContent.includes('5-4-3-2-1')) {
+          targetActivity = 'grounding';
+        } else if (lastContent.includes('relaxation') || lastContent.includes('रिलैक्सेशन') || lastContent.includes('body')) {
+          targetActivity = 'relaxation';
+        } else if (lastContent.includes('sleep') || lastContent.includes('सोने') || lastContent.includes('wind-down')) {
+          targetActivity = 'sleep';
+        }
+
+        if (targetActivity) {
+          navigate(`/wellness?start=${targetActivity}`);
+          return;
+        }
+      }
+    }
 
     const userMsg = {
       id: uuidv4(),
