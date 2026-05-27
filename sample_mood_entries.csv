@@ -1,0 +1,15 @@
+id,user_id,mood_score,note,tags,created_at
+m_1,guest_tester_123,4,Feeling happy after school,"[""happy""]",2026-05-12T10:00:00.000Z
+m_2,guest_tester_123,3,A bit tired from homework,"[""tired"",""study""]",2026-05-13T14:30:00.000Z
+m_3,guest_tester_123,2,Very stressed about upcoming board math exam,"[""stressed"",""exam"",""pressure""]",2026-05-14T18:45:00.000Z
+m_4,guest_tester_123,3,Tried box breathing and it helped calm down,"[""calm"",""study""]",2026-05-15T12:00:00.000Z
+m_5,guest_tester_123,5,Had a great talk with my mother,"[""grateful"",""happy""]",2026-05-16T15:20:00.000Z
+m_6,guest_tester_123,4,Focused and studying well,"[""focus"",""study""]",2026-05-17T11:00:00.000Z
+m_7,guest_tester_123,3,Felt a bit lonely in the evening,"[""lonely""]",2026-05-18T20:10:00.000Z
+m_8,guest_tester_123,2,Anxious about math results,"[""anxious"",""exam"",""fear""]",2026-05-19T09:30:00.000Z
+m_9,guest_tester_123,4,Math exam went well!,"[""happy"",""grateful""]",2026-05-20T14:00:00.000Z
+m_10,guest_tester_123,5,Deep sleep routine helped me rest,"[""calm"",""happy""]",2026-05-21T08:00:00.000Z
+m_11,guest_tester_456,3,Felt standard today,"[""calm""]",2026-05-12T11:00:00.000Z
+m_12,guest_tester_456,2,Had a headache due to heat,"[""tired""]",2026-05-13T15:00:00.000Z
+m_13,guest_tester_456,4,Better after rest,"[""calm""]",2026-05-14T10:00:00.000Z
+m_14,guest_tester_456,5,Great day at sports practice,"[""happy"",""focus""]",2026-05-15T17:00:00.000Z

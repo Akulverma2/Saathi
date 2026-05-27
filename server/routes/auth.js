@@ -1,0 +1,256 @@
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import { getDB } from '../models/database.js';
+import { generateToken } from '../middleware/auth.js';
+
+const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'saathi-dev-secret-change-in-production';
+
+// Sign Up / Register Account (Supports upgrading anonymous guest accounts)
+router.post('/signup', async (req, res) => {
+  try {
+    const { username, password, nickname } = req.body;
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required.' });
+    }
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    let cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
+    if (!cleanUsername.startsWith('@')) {
+      cleanUsername = '@' + cleanUsername;
+    }
+
+    if (cleanUsername.length < 4) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters long (excluding @).' });
+    }
+
+    const db = getDB();
+    
+    // Check if username is already taken
+    const existing = await db.prepare('SELECT id FROM users WHERE username = ?').get(cleanUsername);
+    if (existing) {
+      return res.status(400).json({ error: 'Username is already taken.' });
+    }
+
+    // Hash the password securely
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Check if they are upgrading their active guest session
+    const authHeader = req.headers['authorization'];
+    const guestToken = authHeader && authHeader.split(' ')[1];
+    let guestUserId = null;
+
+    if (guestToken) {
+      try {
+        const decoded = jwt.verify(guestToken, JWT_SECRET);
+        guestUserId = decoded.userId;
+      } catch (e) {
+        // Token invalid/expired — ignore and treat as new signup
+      }
+    }
+
+    if (guestUserId && guestUserId.startsWith('guest_')) {
+      const guestUser = await db.prepare('SELECT id, nickname FROM users WHERE id = ?').get(guestUserId);
+      if (guestUser) {
+        // Upgrade guest user row with permanent credentials!
+        await db.prepare('UPDATE users SET username = ?, password_hash = ?, nickname = ? WHERE id = ?')
+          .run(cleanUsername, passwordHash, nickname || guestUser.nickname || 'Friend', guestUserId);
+        
+        const token = generateToken(guestUserId);
+        return res.json({ 
+          token, 
+          user: {
+            id: guestUserId, 
+            nickname: nickname || guestUser.nickname || 'Friend', 
+            username: cleanUsername,
+            isGuest: false 
+          }
+        });
+      }
+    }
+
+    // If no active guest session to upgrade, create a new registered account
+    const userId = 'user_' + uuidv4();
+    await db.prepare('INSERT INTO users (id, username, password_hash, nickname, language, voice_preference) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(userId, cleanUsername, passwordHash, nickname || 'Friend', 'en', 0);
+
+    const token = generateToken(userId);
+    res.json({ 
+      token, 
+      user: {
+        id: userId, 
+        nickname: nickname || 'Friend', 
+        username: cleanUsername,
+        isGuest: false 
+      }
+    });
+  } catch (err) {
+    console.error('[Auth Sign Up Error]', err.message);
+    res.status(500).json({ error: 'Could not create account.' });
+  }
+});
+
+// Check username availability (real-time validation)
+router.get('/check-username/:username', async (req, res) => {
+  try {
+    let cleanUsername = req.params.username.trim().toLowerCase().replace(/\s+/g, '');
+    if (!cleanUsername.startsWith('@')) {
+      cleanUsername = '@' + cleanUsername;
+    }
+    const db = getDB();
+    const existing = await db.prepare('SELECT id FROM users WHERE username = ?').get(cleanUsername);
+    res.json({ available: !existing });
+  } catch (err) {
+    console.error('[Auth Check Username Error]', err.message);
+    res.status(500).json({ error: 'Could not check username.' });
+  }
+});
+
+// Sign In / Login Account
+router.post('/signin', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required.' });
+    }
+
+    let cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
+    if (!cleanUsername.startsWith('@')) {
+      cleanUsername = '@' + cleanUsername;
+    }
+
+    const db = getDB();
+    
+    // Retrieve user credentials
+    const user = await db.prepare('SELECT id, username, password_hash, nickname, language, voice_preference FROM users WHERE username = ?')
+      .get(cleanUsername);
+    
+    if (!user || !user.password_hash) {
+      return res.status(401).json({ error: 'Invalid username or password.' });
+    }
+
+    // Verify hashed password
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid username or password.' });
+    }
+
+    const token = generateToken(user.id);
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        nickname: user.nickname || 'Friend',
+        language: user.language || 'en',
+        voice_preference: user.voice_preference || 0,
+        isGuest: false
+      }
+    });
+  } catch (err) {
+    console.error('[Auth Sign In Error]', err.message);
+    res.status(500).json({ error: 'Could not sign in.' });
+  }
+});
+
+// Create anonymous guest session
+router.post('/guest', async (req, res) => {
+  try {
+    const db = getDB();
+    const userId = 'guest_' + uuidv4();
+    const { nickname = 'Friend', language = 'en', voice_preference = 0 } = req.body;
+
+    await db.prepare(`INSERT INTO users (id, nickname, language, voice_preference) VALUES (?, ?, ?, ?)`)
+      .run(userId, nickname, language, voice_preference ? 1 : 0);
+
+    const token = generateToken(userId);
+    res.json({ token, userId, nickname, language, isGuest: true });
+  } catch (err) {
+    console.error('[Auth Guest Error]', err.message);
+    res.status(500).json({ error: 'Could not create session.' });
+  }
+});
+
+// Update user preferences
+router.put('/preferences', async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Not authenticated.' });
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (jwtErr) {
+      return res.status(403).json({ error: 'Invalid or expired session. Please sign in again.' });
+    }
+
+    const db = getDB();
+    const { nickname, language, voice_preference, theme, avatar } = req.body;
+
+    await db.prepare(`UPDATE users SET nickname=COALESCE(?,nickname), language=COALESCE(?,language), voice_preference=COALESCE(?,voice_preference), theme=COALESCE(?,theme), avatar=COALESCE(?,avatar) WHERE id=?`)
+      .run(nickname, language, voice_preference !== undefined ? (voice_preference ? 1 : 0) : null, theme, avatar, decoded.userId);
+
+    const user = await db.prepare('SELECT * FROM users WHERE id=?').get(decoded.userId);
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('[Auth Preferences Error]', err.message);
+    res.status(500).json({ error: 'Could not update preferences.' });
+  }
+});
+
+// Get user profile
+router.get('/me', async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Not authenticated.' });
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (jwtErr) {
+      return res.status(403).json({ error: 'Invalid or expired session. Please sign in again.' });
+    }
+
+    const db = getDB();
+    const user = await db.prepare('SELECT id, username, nickname, language, voice_preference, theme, avatar, created_at FROM users WHERE id=?').get(decoded.userId);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    res.json(user);
+  } catch (err) {
+    console.error('[Auth Me Error]', err.message);
+    res.status(500).json({ error: 'Could not fetch profile.' });
+  }
+});
+
+// Delete Account Permanently
+router.delete('/delete', async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Not authenticated.' });
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (jwtErr) {
+      return res.status(403).json({ error: 'Invalid or expired session. Please sign in again.' });
+    }
+
+    const db = getDB();
+    await db.deleteUserAndData(decoded.userId);
+
+    res.json({ success: true, message: 'Account deleted successfully.' });
+  } catch (err) {
+    console.error('[Auth Delete Account Error]', err.message);
+    res.status(500).json({ error: 'Could not delete account.' });
+  }
+});
+
+export default router;
+

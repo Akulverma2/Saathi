@@ -1,0 +1,96 @@
+// Crisis detection service — keyword matching + severity scoring
+// This is an MVP implementation. Phase 2 should use fine-tuned ML models.
+
+const CRISIS_PATTERNS = {
+  level3: {
+    // Immediate high-risk - suicide/self-harm explicit
+    keywords: [
+      'kill myself', 'want to die', 'end my life', 'suicide', 'suicidal',
+      'hurt myself', 'self harm', 'self-harm', 'cut myself', 'overdose',
+      'मरना चाहता', 'मरना चाहती', 'जीना नहीं चाहता', 'जीना नहीं चाहती',
+      'खुद को नुकसान', 'आत्महत्या', 'مرنا چاہتا', 'خودکشی',
+      'no reason to live', 'better off dead', 'nobody would miss me',
+      'abused', 'being abused', 'someone is hurting me', 'sexual abuse',
+    ],
+    score: 3,
+  },
+  level2: {
+    // Moderate risk - distress signals
+    keywords: [
+      'hopeless', 'worthless', 'nobody cares', 'cant go on', "can't go on",
+      'disappear', 'give up', 'no point', 'hate myself', 'hate my life',
+      'tired of everything', 'tired of living', 'nothing matters',
+      'बेकार हूं', 'किसी को परवाह नहीं', 'हार मान ली', 'बहुत थक गया',
+      'alone forever', 'always alone', 'no friends', 'completely alone',
+      'panic attack', 'cant breathe', "can't breathe", 'breaking down',
+    ],
+    score: 2,
+  },
+  level1: {
+    // Mild - elevated distress, needs support
+    keywords: [
+      'stressed', 'anxious', 'anxiety', 'depressed', 'depression', 'sad',
+      'crying', 'scared', 'afraid', 'worried', 'overwhelmed', 'exhausted',
+      'can\'t sleep', 'not eating', 'bullied', 'bullying', 'lonely',
+      'परेशान', 'दुखी', 'अकेला', 'नींद नहीं', 'डर', 'चिंता',
+      'failing', 'failed', 'failure', 'disappointed', 'pressure',
+    ],
+    score: 1,
+  },
+};
+
+export function detectCrisisLevel(text) {
+  if (!text || typeof text !== 'string') return { level: 0, keywords: [] };
+
+  const lowerText = text.toLowerCase();
+  const matchedKeywords = [];
+  let maxLevel = 0;
+
+  // Check level 3 first (most critical)
+  for (const keyword of CRISIS_PATTERNS.level3.keywords) {
+    if (lowerText.includes(keyword.toLowerCase())) {
+      matchedKeywords.push({ keyword, level: 3 });
+      maxLevel = 3;
+    }
+  }
+
+  // Check level 2
+  for (const keyword of CRISIS_PATTERNS.level2.keywords) {
+    if (lowerText.includes(keyword.toLowerCase())) {
+      matchedKeywords.push({ keyword, level: 2 });
+      if (maxLevel < 2) maxLevel = 2;
+    }
+  }
+
+  // Check level 1
+  for (const keyword of CRISIS_PATTERNS.level1.keywords) {
+    if (lowerText.includes(keyword.toLowerCase())) {
+      matchedKeywords.push({ keyword, level: 1 });
+      if (maxLevel < 1) maxLevel = 1;
+    }
+  }
+
+  return {
+    level: maxLevel,
+    keywords: matchedKeywords,
+    requiresImmediate: maxLevel === 3,
+    requiresEscalation: maxLevel >= 2,
+  };
+}
+
+export function getHelplineInfo(language = 'en') {
+  const helplines = {
+    en: [
+      { name: 'iCall (TISS)', number: '9152987821', available: 'Mon-Sat, 8am-10pm', free: false },
+      { name: 'KIRAN Mental Health', number: '1800-599-0019', available: '24/7', free: true },
+      { name: 'Vandrevala Foundation', number: '1860-2662-345', available: '24/7', free: false },
+      { name: 'Emergency', number: '112', available: '24/7', free: true },
+    ],
+    hi: [
+      { name: 'किरण हेल्पलाइन', number: '1800-599-0019', available: '24/7, मुफ्त', free: true },
+      { name: 'iCall (TISS)', number: '9152987821', available: 'सोम-शनि, सुबह 8 - रात 10', free: false },
+      { name: 'आपातकालीन', number: '112', available: '24/7', free: true },
+    ],
+  };
+  return helplines[language] || helplines.en;
+}

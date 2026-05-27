@@ -1,0 +1,8 @@
+id,user_id,activity_type,duration_seconds,completed,created_at
+s_1,guest_tester_123,breathing-box,240,1,2026-05-13T14:40:00.000Z
+s_2,guest_tester_123,study-pomodoro,1500,1,2026-05-14T11:30:00.000Z
+s_3,guest_tester_123,breathing-478,180,1,2026-05-14T19:00:00.000Z
+s_4,guest_tester_123,journal-daily,600,1,2026-05-16T15:30:00.000Z
+s_5,guest_tester_123,sleep-routine,600,1,2026-05-20T21:30:00.000Z
+s_6,guest_tester_456,progressive-relax,420,1,2026-05-13T15:10:00.000Z
+s_7,guest_tester_456,grounding-54321,300,1,2026-05-14T10:15:00.000Z
