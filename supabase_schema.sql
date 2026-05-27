@@ -1,5 +1,5 @@
--- Project Saathi Supabase Schema
--- Run this in your Supabase SQL Editor to create tables for production
+-- Project Saathi Supabase Schema (Updated)
+-- Run this in your Supabase SQL Editor
 
 -- Drop existing tables if they exist to start fresh
 DROP TABLE IF EXISTS user_memories CASCADE;
@@ -10,13 +10,16 @@ DROP TABLE IF EXISTS mood_entries CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
--- 1. Users table (Custom anonymous auth)
+-- 1. Users table
 CREATE TABLE users (
     id TEXT PRIMARY KEY,
+    username TEXT UNIQUE,
+    password_hash TEXT,
     nickname TEXT DEFAULT 'Friend',
     language TEXT DEFAULT 'en',
     voice_preference INTEGER DEFAULT 0,
     theme TEXT DEFAULT 'calmMode',
+    avatar TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -32,13 +35,13 @@ CREATE TABLE messages (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Mood entries table (formerly moods)
+-- 3. Mood entries table
 CREATE TABLE mood_entries (
     id TEXT PRIMARY KEY,
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     mood_score INTEGER NOT NULL CHECK (mood_score >= 1 AND mood_score <= 5),
     note TEXT DEFAULT '',
-    tags TEXT DEFAULT '[]', -- JSON string/array of tags
+    tags TEXT DEFAULT '[]',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -52,7 +55,7 @@ CREATE TABLE wellness_sessions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. Journal Entries table (formerly journals)
+-- 5. Journal Entries table
 CREATE TABLE journal_entries (
     id TEXT PRIMARY KEY,
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
@@ -68,7 +71,7 @@ CREATE TABLE crisis_events (
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     message_id TEXT REFERENCES messages(id) ON DELETE CASCADE,
     risk_level INTEGER NOT NULL,
-    keywords_matched TEXT DEFAULT '[]', -- JSON string of matched terms
+    keywords_matched TEXT DEFAULT '[]',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -89,11 +92,11 @@ ALTER TABLE journal_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE crisis_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_memories ENABLE ROW LEVEL SECURITY;
 
--- Allow all operations for authenticated service roles and public access (since backend manages auth via custom JWTs)
-CREATE POLICY "Allow all on users" ON users FOR ALL USING (true);
-CREATE POLICY "Allow all on messages" ON messages FOR ALL USING (true);
-CREATE POLICY "Allow all on mood_entries" ON mood_entries FOR ALL USING (true);
-CREATE POLICY "Allow all on wellness_sessions" ON wellness_sessions FOR ALL USING (true);
-CREATE POLICY "Allow all on journal_entries" ON journal_entries FOR ALL USING (true);
-CREATE POLICY "Allow all on crisis_events" ON crisis_events FOR ALL USING (true);
-CREATE POLICY "Allow all on user_memories" ON user_memories FOR ALL USING (true);
+-- Allow all operations (backend manages auth via custom JWTs)
+CREATE POLICY "Allow all on users" ON users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on messages" ON messages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on mood_entries" ON mood_entries FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on wellness_sessions" ON wellness_sessions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on journal_entries" ON journal_entries FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on crisis_events" ON crisis_events FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on user_memories" ON user_memories FOR ALL USING (true) WITH CHECK (true);
