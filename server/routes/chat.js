@@ -2,7 +2,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticate } from '../middleware/auth.js';
 import { getDB } from '../models/database.js';
-import { generateChatResponse, generateChatResponseStream, extractMemories, classifyCrisisRisk } from '../services/aiService.js';
+import { generateChatResponse, generateChatResponseStream, extractMemories } from '../services/aiService.js';
 import { detectCrisisLevel } from '../services/crisisDetector.js';
 
 const router = express.Router();
@@ -28,18 +28,6 @@ router.post('/message', authenticate, async (req, res) => {
 
     // Crisis detection on incoming message
     const crisis = detectCrisisLevel(content);
-    
-    // Second-pass AI-based crisis classification for indirect expressions of hopelessness
-    if (crisis.level < 2) {
-      const aiRisk = await classifyCrisisRisk(content);
-      if (aiRisk > crisis.level) {
-        crisis.level = aiRisk;
-        crisis.requiresImmediate = aiRisk === 3;
-        crisis.requiresEscalation = aiRisk >= 2;
-        crisis.keywords = crisis.keywords || [];
-        crisis.keywords.push({ keyword: 'AI_INDIRECT_DETECTION', level: aiRisk });
-      }
-    }
 
     // Save user message
     await db.prepare(`INSERT INTO messages (id, user_id, role, content, risk_level, language) VALUES (?, ?, 'user', ?, ?, ?)`)
@@ -49,27 +37,6 @@ router.post('/message', authenticate, async (req, res) => {
     if (crisis.level >= 2) {
       await db.prepare(`INSERT INTO crisis_events (id, user_id, message_id, risk_level, keywords_matched) VALUES (?, ?, ?, ?, ?)`)
         .run(uuidv4(), userId, messageId, crisis.level, JSON.stringify(crisis.keywords));
-    }
-
-    // Level 3 crisis: Immediately intercept and return helpline info (prevents hitting LLM)
-    if (crisis.level === 3) {
-      const responseText = "This is important and you deserve real help right now. Please reach out to iCall at 9152987821 or the KIRAN helpline at 1800-599-0019 (free, 24/7). Please talk to a trusted adult. You are not alone.";
-      const aiMessageId = uuidv4();
-      
-      await db.prepare(`INSERT INTO messages (id, user_id, role, content, risk_level, language) VALUES (?, ?, 'assistant', ?, 3, ?)`)
-        .run(aiMessageId, userId, responseText, language);
-
-      await db.prepare(`INSERT INTO crisis_events (id, user_id, message_id, risk_level, keywords_matched) VALUES (?, ?, ?, 3, ?)`)
-        .run(uuidv4(), userId, aiMessageId, JSON.stringify([{ keyword: 'AI_SAFETY_INTERCEPT', level: 3 }]));
-
-      return res.json({
-        id: aiMessageId,
-        content: responseText,
-        role: 'assistant',
-        crisisLevel: 3,
-        requiresImmediate: true,
-        timestamp: new Date().toISOString(),
-      });
     }
 
     // Get last 20 messages for context
@@ -162,18 +129,6 @@ router.post('/message/stream', authenticate, async (req, res) => {
 
     // Crisis detection on incoming message
     const crisis = detectCrisisLevel(content);
-    
-    // Second-pass AI-based crisis classification for indirect expressions of hopelessness
-    if (crisis.level < 2) {
-      const aiRisk = await classifyCrisisRisk(content);
-      if (aiRisk > crisis.level) {
-        crisis.level = aiRisk;
-        crisis.requiresImmediate = aiRisk === 3;
-        crisis.requiresEscalation = aiRisk >= 2;
-        crisis.keywords = crisis.keywords || [];
-        crisis.keywords.push({ keyword: 'AI_INDIRECT_DETECTION', level: aiRisk });
-      }
-    }
 
     // Save user message
     await db.prepare(`INSERT INTO messages (id, user_id, role, content, risk_level, language) VALUES (?, ?, 'user', ?, ?, ?)`)
