@@ -1,45 +1,151 @@
 # Project Saathi 🌱
 
-A Progressive Web App (PWA) mental wellness companion for rural teens.
+Project Saathi is an AI-powered Progressive Web App (PWA) designed to support mental wellness for rural teens through empathetic AI conversations, mood tracking, multilingual accessibility, and offline-first support.
 
-## Features Built
-- 💬 **AI Chat**: Empathetic, offline-queued, context-aware AI chat
-- 🎙️ **Voice I/O**: Web Speech API for voice recording and text-to-speech
-- 😊 **Mood Tracking**: Emoji check-ins, timeline, and streaks
-- 🌿 **Wellness Hub**: CSS-animated breathing exercises, grounding
-- 🚨 **Crisis Detection**: Client & server keyword matching + helpline UI
-- 🌐 **Multilingual**: English, Hindi, Urdu (via i18next)
-- 📶 **Offline-First**: IndexedDB storage, Workbox Service Worker, background sync
-- 🎨 **Design System**: Calm UI, CSS custom properties, dark mode
+---
 
-## Setup Instructions
+## 🌍 Problem Statement
 
-1. **Install Dependencies**
-   ```bash
-   cd client && npm install
-   cd ../server && npm install
-   ```
+Many teenagers, especially in rural and underserved communities, lack access to affordable mental health support, emotional guidance, and wellness resources.
 
-2. **Configure Environment**
-   Create a `.env` file in the `server` directory:
-   ```env
-   GEMINI_API_KEY=your_google_gemini_api_key
-   PORT=3001
-   ```
+Project Saathi aims to provide:
+- Accessible emotional support
+- AI-powered conversations
+- Wellness activities
+- Crisis awareness
+- Offline accessibility
+- Multilingual communication
 
-3. **Start Servers**
-   Terminal 1 (Backend):
-   ```bash
-   cd server && npm run dev
-   ```
-   
-   Terminal 2 (Frontend):
-   ```bash
-   cd client && npm run dev
-   ```
+---
 
-## Key Technologies
-- Frontend: React 18, Vite, React Router, i18next, idb
-- Styling: Vanilla CSS (Custom properties, mobile-first)
-- Backend: Node.js, Express, better-sqlite3
-- AI: Google Gemini (`gemini-2.0-flash`)
+## ✨ Features
+
+### 💬 AI Wellness Chat
+- Context-aware AI conversations
+- Empathetic responses
+- Offline queue support
+- Fast response system using Gemini API
+
+### 😊 Mood Tracking
+- Daily mood check-ins
+- Mood timeline/history
+- Emotional streak tracking
+
+### 🎙️ Voice Features
+- Speech-to-text input
+- Text-to-speech responses
+- Accessibility-focused interaction
+
+### 🌿 Wellness Hub
+- Breathing exercises
+- Grounding activities
+- Calming UI animations
+
+### 🚨 Crisis Detection
+- Detects harmful or crisis-related keywords
+- Displays emergency guidance and helpline UI
+
+### 🌐 Multilingual Support
+- English
+- Hindi
+- Urdu
+
+### 📶 Offline-First PWA
+- IndexedDB storage
+- Background sync
+- Service Worker support
+- Installable mobile experience
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- React 18
+- Vite
+- React Router
+- i18next
+- IndexedDB (idb)
+
+### Backend
+- Node.js
+- Express.js
+- better-sqlite3
+
+### AI
+- Google Gemini API (`gemini-2.0-flash`)
+
+### Other
+- Docker
+- PWA
+- Workbox
+- Web Speech API
+
+---
+
+## ⚙️ Installation
+
+### Clone Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/project-saathi.git
+```
+
+### Install Dependencies
+
+```bash
+cd client
+npm install
+
+cd ../server
+npm install
+```
+
+### Setup Environment Variables
+
+Create a `.env` file inside the `server` folder.
+
+```env
+GEMINI_API_KEY=your_api_key
+PORT=3001
+```
+
+### Run Backend
+
+```bash
+cd server
+npm run dev
+```
+
+### Run Frontend
+
+```bash
+cd client
+npm run dev
+```
+
+---
+
+## 📱 Future Improvements
+
+- AI journaling
+- Therapist connection support
+- More regional languages
+- AI emotion analytics
+- Better offline AI caching
+- Community wellness features
+
+---
+
+## 👨‍💻 Author
+
+Built with passion during a hackathon to improve mental wellness accessibility for teens.
+
+---
+
+## ⭐ Support
+
+If you liked this project:
+- Give it a star ⭐ on GitHub
+- Share feedback
+- Contribute ideas and improvements
