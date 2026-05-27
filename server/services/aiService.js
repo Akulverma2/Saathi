@@ -341,3 +341,49 @@ export function getLocalFallbackResponse(text, language = 'en') {
     ? "मैं यहाँ हूँ, और आपकी हर बात सुन रही हूँ। आप आज कैसा महसूस कर रही हैं? चाहे सुख हो या दुख, आप मुझसे कुछ भी साझा कर सकती हैं। मैं हमेशा आपके साथ हूँ। 💙"
     : "I am right here with you, and I am listening. Whatever is on your mind today—whether it's big or small—please know I truly care. How are you feeling right now? 💙";
 }
+
+/**
+ * Perform a high-speed second-pass safety classification on a user's message using Gemini.
+ * This handles subtle, indirect, or mixed-language (Hinglish/Urdu) expressions of despair.
+ * @param {string} text The user message content
+ * @returns {Promise<number>} Returns 3 (high risk), 2 (moderate risk), or 0 (no risk)
+ */
+export async function classifyCrisisRisk(text) {
+  if (!text || typeof text !== 'string' || text.trim().length === 0) return 0;
+  
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
+      generationConfig: {
+        maxOutputTokens: 5,
+        temperature: 0.1, // Low temp for highly deterministic classification
+      }
+    });
+
+    const prompt = `Analyze this message from a teenager for any signs of extreme hopelessness, suicidal ideation, self-harm, abuse, or severe crisis. 
+We want to capture subtle, indirect, or hidden expressions of hopelessness (e.g. "I'm so tired of everything", "nobody would notice if I was gone tomorrow", "zindagi se thak gaya hoon", "sab khatam ho gaya", "ab nahi jeena", "sab khatam karna hai").
+
+Determine the crisis level:
+3 - Immediate high risk (suicide, self-harm, abuse, severe crisis, active intent to end life)
+2 - Moderate risk (hopelessness, severe distress, severe panic, wishing to disappear)
+0 - No crisis risk (normal conversations, standard sad/stressed/happy feelings)
+
+Message: "${text.replace(/"/g, '\\"')}"
+
+Output ONLY a single number: 3, 2, or 0. Do not include any other text, markdown, or explanation.`;
+
+    const result = await model.generateContent(prompt);
+    const classification = result.response.text().trim();
+    const parsed = parseInt(classification);
+    
+    if ([0, 2, 3].includes(parsed)) {
+      console.log(`[Crisis AI Classification] Score: ${parsed} for text: "${text}"`);
+      return parsed;
+    }
+    return 0;
+  } catch (err) {
+    console.error('[Crisis AI Classification Error]', err.message);
+    return 0;
+  }
+}

@@ -16,7 +16,10 @@ const CRISIS_PATTERNS = {
       'ending my life', 'जीने का कोई फायदा नहीं', 'मर जाना चाहिए',
       'मैं मरना', 'सब खत्म करना चाहता', 'सब खत्म करना चाहती',
       'sab khatam karna hai', 'sab kuch khatam karna', 'mar jana chahta',
-      'mar jana chahti', 'koi fayda nahi hai jeene ka', 'no one would notice if i was gone'
+      'mar jana chahti', 'koi fayda nahi hai jeene ka', 'no one would notice if i was gone',
+      'sab khatam ho gaya', 'zindagi se thak', 'ab nahi jeena', 'ab aur nahi', 
+      'no point in living', 'end it today', 'khatam kar dunga', 'khatam kar dungi', 
+      'jeena bekar', 'kuch nahi bacha', 'tired of this pain', 'nobody cares if i die'
     ],
     score: 3,
   },
@@ -34,7 +37,8 @@ const CRISIS_PATTERNS = {
       'koi pyar nahi karta', 'मैं थक गया हूँ', 'मैं थक गई हूँ', 'अब नहीं हो रहा',
       'अब नहीं होता', 'can\'t handle this anymore', 'cant handle this anymore',
       'can\'t take this anymore', 'cant take this anymore', 'nothing goes right',
-      'no one cares about me'
+      'no one cares about me', 'worthless life', 'nothing is going right', 
+      'want to disappear', 'sab se dur jana', 'ab aur nahi hota', 'cannot go on'
     ],
     score: 2,
   },
