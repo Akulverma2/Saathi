@@ -166,7 +166,7 @@ class SupabaseStatement {
 
     try {
       // 1. INSERT INTO users (id, nickname, language, voice_preference) VALUES (?, ?, ?, ?)
-      if (sql.includes('INSERT INTO users') && sql.includes('voice_preference')) {
+      if (sql.includes('INSERT INTO users') && sql.includes('voice_preference') && !sql.includes('password_hash')) {
         const [id, nickname, language, voice_preference] = params;
         const { error } = await supabase
           .from('users')
@@ -174,6 +174,7 @@ class SupabaseStatement {
         if (error) throw error;
         return { changes: 1 };
       }
+
 
       // 2. UPDATE users SET nickname=COALESCE(?,nickname), language=COALESCE(?,language), voice_preference=COALESCE(?,voice_preference), theme=COALESCE(?,theme), avatar=COALESCE(?,avatar) WHERE id=?
       if (sql.includes('UPDATE users SET') && sql.includes('COALESCE')) {
