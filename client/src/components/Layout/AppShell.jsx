@@ -26,6 +26,8 @@ export default function AppShell() {
       } else if (count >= 2 && !dismissed) {
         setShowWarning(true);
       }
+    } else {
+      setShowWarning(false);
     }
   }, [user]);
 
