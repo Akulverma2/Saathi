@@ -12,7 +12,7 @@ export default function AppShell() {
   const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
-    if (user && user.isGuest) {
+    if (user && (user.isGuest || !user.username)) {
       const count = parseInt(localStorage.getItem('saathi_guest_sessions') || '1');
       const dismissed = localStorage.getItem('saathi_guest_warning_dismissed') === 'true';
       

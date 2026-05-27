@@ -20,7 +20,7 @@ export default function SignUp() {
   const [usernameStatus, setUsernameStatus] = useState('idle'); // idle | checking | available | taken | error
   const checkTimeoutRef = useRef(null);
 
-  const isUpgrading = user && user.isGuest;
+  const isUpgrading = user && (user.isGuest || !user.username);
 
   // Debounced real-time username availability check
   useEffect(() => {

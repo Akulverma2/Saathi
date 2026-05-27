@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
         try {
           const profile = await api.getMe();
           if (profile && profile.id) {
+            profile.isGuest = !profile.username;
             setUser(profile);
             await saveProfile(profile);
           } else {
@@ -97,6 +98,7 @@ export function AuthProvider({ children }) {
         updated = { ...updated, ...res.user };
       }
     } catch { /* offline, update locally only */ }
+    updated.isGuest = !updated.username;
     setUser(updated);
     await saveProfile(updated);
     if (prefs.language) {

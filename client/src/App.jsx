@@ -33,6 +33,12 @@ function ProfilePage() {
   const languages = [
     { code: 'en', label: 'English' },
     { code: 'hi', label: 'हिंदी' },
+    { code: 'bn', label: 'বাংলা' },
+    { code: 'te', label: 'తెలుగు' },
+    { code: 'ta', label: 'தமிழ்' },
+    { code: 'mr', label: 'मराठी' },
+    { code: 'kn', label: 'ಕನ್ನಡ' },
+    { code: 'gu', label: 'ગુજરાતી' },
     { code: 'ur', label: 'اردو' }
   ];
 
@@ -152,7 +158,7 @@ function ProfilePage() {
     }
   };
 
-  const isGuest = !user || user.isGuest;
+  const isGuest = !user || user.isGuest || !user.username;
 
   return (
     <div className="profile-page animate-fade-in" style={{ padding: '1rem', paddingBottom: '80px' }}>
