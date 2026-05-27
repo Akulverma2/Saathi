@@ -83,6 +83,16 @@ CREATE TABLE user_memories (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 8. System Errors table (for background jobs monitoring)
+CREATE TABLE system_errors (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    job_type TEXT NOT NULL,
+    error_message TEXT NOT NULL,
+    payload TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Enable Row Level Security (RLS) for all tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
@@ -91,6 +101,7 @@ ALTER TABLE wellness_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journal_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE crisis_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_memories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE system_errors ENABLE ROW LEVEL SECURITY;
 
 -- Allow all operations (backend manages auth via custom JWTs)
 CREATE POLICY "Allow all on users" ON users FOR ALL USING (true) WITH CHECK (true);
@@ -100,3 +111,4 @@ CREATE POLICY "Allow all on wellness_sessions" ON wellness_sessions FOR ALL USIN
 CREATE POLICY "Allow all on journal_entries" ON journal_entries FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on crisis_events" ON crisis_events FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on user_memories" ON user_memories FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on system_errors" ON system_errors FOR ALL USING (true) WITH CHECK (true);

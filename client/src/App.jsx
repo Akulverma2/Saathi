@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import AppShell from './components/Layout/AppShell';
 import Welcome from './components/Onboarding/Welcome';
-import Assessment from './components/Onboarding/Assessment';
-import ChatView from './components/Chat/ChatView';
-import MoodCheckIn from './components/MoodTracker/MoodCheckIn';
-import WellnessHub from './components/Wellness/WellnessHub';
-import MoodDashboard from './components/MoodTracker/MoodDashboard';
-import SignIn from './components/Auth/SignIn';
-import SignUp from './components/Auth/SignUp';
+
+// Lazy load heavy dashboard, forms, and assessment wizard
+const Assessment = React.lazy(() => import('./components/Onboarding/Assessment'));
+const ChatView = React.lazy(() => import('./components/Chat/ChatView'));
+const MoodCheckIn = React.lazy(() => import('./components/MoodTracker/MoodCheckIn'));
+const WellnessHub = React.lazy(() => import('./components/Wellness/WellnessHub'));
+const MoodDashboard = React.lazy(() => import('./components/MoodTracker/MoodDashboard'));
+const SignIn = React.lazy(() => import('./components/Auth/SignIn'));
+const SignUp = React.lazy(() => import('./components/Auth/SignUp'));
 
 import { useTheme } from './contexts/ThemeContext';
 import { api } from './services/apiClient';
@@ -31,12 +33,6 @@ function ProfilePage() {
   const languages = [
     { code: 'en', label: 'English' },
     { code: 'hi', label: 'हिंदी' },
-    { code: 'bn', label: 'বাংলা' },
-    { code: 'te', label: 'తెలుగు' },
-    { code: 'ta', label: 'தமிழ்' },
-    { code: 'mr', label: 'मराठी' },
-    { code: 'kn', label: 'ಕನ್ನಡ' },
-    { code: 'gu', label: 'ગુજરાતી' },
     { code: 'ur', label: 'اردو' }
   ];
 
@@ -567,40 +563,44 @@ function ProfilePage() {
   );
 }
 
+const LoadingScreen = () => (
+  <div className="loading-screen" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--color-bg)' }}>
+    <div className="loading-logo" style={{ fontSize: '3rem', animation: 'pulse 1.5s infinite' }}>🌿</div>
+    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '12px' }}>Preparing your safe space...</p>
+  </div>
+);
+
 export default function App() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-logo">🌿</div>
-        <p>Loading Saathi...</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
-    <Routes>
-      <Route path="/onboarding" element={<Assessment />} />
-      {!user ? (
-        <>
-          <Route path="/" element={<Welcome />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </>
-      ) : (
-        <Route element={<AppShell />}>
-          <Route path="/" element={<Navigate to="/chat" replace />} />
-          <Route path="/chat" element={<ChatView />} />
-          <Route path="/mood" element={<MoodCheckIn />} />
-          <Route path="/wellness" element={<WellnessHub />} />
-          <Route path="/dashboard" element={<MoodDashboard />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/signup" element={<SignUp />} /> {/* Upgrade anonymous guest user route */}
-          <Route path="*" element={<Navigate to="/chat" replace />} />
-        </Route>
-      )}
-    </Routes>
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
+        <Route path="/onboarding" element={<Assessment />} />
+        {!user ? (
+          <>
+            <Route path="/" element={<Welcome />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        ) : (
+          <Route element={<AppShell />}>
+            <Route path="/" element={<Navigate to="/chat" replace />} />
+            <Route path="/chat" element={<ChatView />} />
+            <Route path="/mood" element={<MoodCheckIn />} />
+            <Route path="/wellness" element={<WellnessHub />} />
+            <Route path="/dashboard" element={<MoodDashboard />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/signup" element={<SignUp />} /> {/* Upgrade anonymous guest user route */}
+            <Route path="*" element={<Navigate to="/chat" replace />} />
+          </Route>
+        )}
+      </Routes>
+    </Suspense>
   );
 }

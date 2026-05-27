@@ -3,7 +3,7 @@
 
 const CRISIS_PATTERNS = {
   level3: {
-    // Immediate high-risk - suicide/self-harm explicit
+    // Immediate high-risk - suicide/self-harm explicit and clear indirect hopeless intent
     keywords: [
       'kill myself', 'want to die', 'end my life', 'suicide', 'suicidal',
       'hurt myself', 'self harm', 'self-harm', 'cut myself', 'overdose',
@@ -11,11 +11,17 @@ const CRISIS_PATTERNS = {
       'खुद को नुकसान', 'आत्महत्या', 'مرنا چاہتا', 'خودکشی',
       'no reason to live', 'better off dead', 'nobody would miss me',
       'abused', 'being abused', 'someone is hurting me', 'sexual abuse',
+      'nobody would notice if i was gone', 'nobody would notice if i died',
+      'better off dead', 'better off if i was dead', 'want to end it all',
+      'ending my life', 'जीने का कोई फायदा नहीं', 'मर जाना चाहिए',
+      'मैं मरना', 'सब खत्म करना चाहता', 'सब खत्म करना चाहती',
+      'sab khatam karna hai', 'sab kuch khatam karna', 'mar jana chahta',
+      'mar jana chahti', 'koi fayda nahi hai jeene ka', 'no one would notice if i was gone'
     ],
     score: 3,
   },
   level2: {
-    // Moderate risk - distress signals
+    // Moderate risk - distress signals, severe hopelessness
     keywords: [
       'hopeless', 'worthless', 'nobody cares', 'cant go on', "can't go on",
       'disappear', 'give up', 'no point', 'hate myself', 'hate my life',
@@ -23,6 +29,12 @@ const CRISIS_PATTERNS = {
       'बेकार हूं', 'किसी को परवाह नहीं', 'हार मान ली', 'बहुत थक गया',
       'alone forever', 'always alone', 'no friends', 'completely alone',
       'panic attack', 'cant breathe', "can't breathe", 'breaking down',
+      'tired of this life', 'tired of my life', 'zindagi se tang',
+      'tang aa chuka', 'tang aa chuki', 'jeena nahi hai', 'koi nahi chahta mujhe',
+      'koi pyar nahi karta', 'मैं थक गया हूँ', 'मैं थक गई हूँ', 'अब नहीं हो रहा',
+      'अब नहीं होता', 'can\'t handle this anymore', 'cant handle this anymore',
+      'can\'t take this anymore', 'cant take this anymore', 'nothing goes right',
+      'no one cares about me'
     ],
     score: 2,
   },

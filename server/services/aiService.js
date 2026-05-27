@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { buildSystemPrompt } from '../config/systemPrompt.js';
+import { detectCrisisLevel } from './crisisDetector.js';
 
 const safetySettings = [
   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
@@ -7,17 +8,6 @@ const safetySettings = [
   { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
 ];
-
-const CRISIS_KEYWORDS = [
-  /\b(i want to|going to) (kill myself|end my life|die|commit suicide|slit my wrists|jump off)\b/i,
-  /\b(i'm thinking about suicide|thinking of ending it)\b/i,
-  /\b(i want to|going to) (cut myself|hurt myself|harm myself)\b/i,
-  /\b(he|she|they) (beat|hit|molested|assaulted|raped) me\b/i
-];
-
-function detectCrisis(text) {
-  return CRISIS_KEYWORDS.some(regex => regex.test(text));
-}
 
 function scrubPII(text) {
   let scrubbed = text.replace(/\b\d{10,12}\b/g, '[PHONE]');
@@ -53,8 +43,9 @@ export async function generateChatResponse({ messages, language = 'en', userCont
     const chat = model.startChat({ history, safetySettings });
     const lastMessage = messages[messages.length - 1];
     
-    // Guardrail 1: Pre-flight Crisis Detection
-    if (detectCrisis(lastMessage.content)) {
+    // Guardrail 1: Pre-flight Crisis Detection using consolidated detector
+    const preFlightCrisis = detectCrisisLevel(lastMessage.content);
+    if (preFlightCrisis.level === 3) {
       return {
         text: "This is important and you deserve real help right now. Please reach out to iCall at 9152987821 or the KIRAN helpline at 1800-599-0019 (free, 24/7). Please talk to a trusted adult. You are not alone.",
         safetyBlocked: true,
@@ -75,9 +66,17 @@ export async function generateChatResponse({ messages, language = 'en', userCont
       };
     }
 
+    let textVal = response.text();
+    let isCrisisPassed = false;
+    if (textVal.includes('[CRISIS_ALERT]')) {
+      textVal = textVal.replace('[CRISIS_ALERT]', '').trim();
+      isCrisisPassed = true;
+    }
+
     return {
-      text: response.text(),
-      safetyBlocked: false,
+      text: textVal,
+      safetyBlocked: isCrisisPassed,
+      isCrisis: isCrisisPassed,
     };
   } catch (err) {
     console.error('[AI Service Error - Activating Local Empathy Engine]', err.message);
@@ -121,7 +120,8 @@ export async function generateChatResponseStream({ messages, language = 'en', us
     const chat = model.startChat({ history, safetySettings });
     const lastMessage = messages[messages.length - 1];
 
-    if (detectCrisis(lastMessage.content)) {
+    const preFlightCrisis = detectCrisisLevel(lastMessage.content);
+    if (preFlightCrisis.level === 3) {
       return {
         isCrisis: true,
         text: "This is important and you deserve real help right now. Please reach out to iCall at 9152987821 or the KIRAN helpline at 1800-599-0019 (free, 24/7). Please talk to a trusted adult. You are not alone."

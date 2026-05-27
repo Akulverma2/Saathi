@@ -562,6 +562,7 @@ class Database {
       journal_entries: [],
       crisis_events: [],
       user_memories: [],
+      system_errors: [],
     };
     
     if (supabase) {

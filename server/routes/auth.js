@@ -1,6 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import rateLimit from 'express-rate-limit';
 import { v4 as uuidv4 } from 'uuid';
 import { getDB } from '../models/database.js';
 import { generateToken } from '../middleware/auth.js';
@@ -8,15 +9,35 @@ import { generateToken } from '../middleware/auth.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'saathi-dev-secret-change-in-production';
 
+// Signup rate limiter (strictly IP based to prevent registration spam)
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // max 5 attempts per hour per IP
+  message: { error: 'Too many accounts created from this IP. Please try again in an hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip,
+});
+
+// Signin rate limiter
+const signinLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // max 10 login attempts per 15 minutes per IP
+  message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip,
+});
+
 // Sign Up / Register Account (Supports upgrading anonymous guest accounts)
-router.post('/signup', async (req, res) => {
+router.post('/signup', signupLimiter, async (req, res) => {
   try {
     const { username, password, nickname } = req.body;
     if (!username) {
       return res.status(400).json({ error: 'Username is required.' });
     }
-    if (!password || password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    if (!password || password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
     }
 
     let cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
@@ -112,7 +133,7 @@ router.get('/check-username/:username', async (req, res) => {
 });
 
 // Sign In / Login Account
-router.post('/signin', async (req, res) => {
+router.post('/signin', signinLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {

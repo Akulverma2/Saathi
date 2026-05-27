@@ -59,7 +59,7 @@ export default function SignUp() {
     if (!pwd) return { score: 0, label: '', color: '' };
     let score = 0;
     const checks = {
-      length: pwd.length >= 6,
+      length: pwd.length >= 8,
       uppercase: /[A-Z]/.test(pwd),
       lowercase: /[a-z]/.test(pwd),
       number: /[0-9]/.test(pwd),
@@ -91,7 +91,7 @@ export default function SignUp() {
     if (cleanUsername.length < 4) {
       return setError('Username must be at least 3 characters long (excluding @).');
     }
-    if (password.length < 6) return setError('Password must be at least 6 characters.');
+    if (password.length < 8) return setError('Password must be at least 8 characters.');
 
     // Block if username is known to be taken
     if (usernameStatus === 'taken') {
@@ -218,7 +218,7 @@ export default function SignUp() {
               <input 
                 type={showPassword ? 'text' : 'password'} 
                 className="input" 
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -281,7 +281,7 @@ export default function SignUp() {
                 {/* Requirement checklist */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
                   {[
-                    { key: 'length', label: '6+ chars' },
+                    { key: 'length', label: '8+ chars' },
                     { key: 'uppercase', label: 'A-Z' },
                     { key: 'lowercase', label: 'a-z' },
                     { key: 'number', label: '0-9' },

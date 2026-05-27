@@ -13,12 +13,6 @@ export default function Welcome() {
   const languages = [
     { code: 'en', label: 'English', letter: 'A' },
     { code: 'hi', label: 'हिंदी', letter: 'अ' },
-    { code: 'bn', label: 'বাংলা', letter: 'অ' },
-    { code: 'te', label: 'తెలుగు', letter: 'అ' },
-    { code: 'ta', label: 'தமிழ்', letter: 'அ' },
-    { code: 'mr', label: 'मराठी', letter: 'अ' },
-    { code: 'kn', label: 'ಕನ್ನಡ', letter: 'ಅ' },
-    { code: 'gu', label: 'ગુજરાતી', letter: 'અ' },
     { code: 'ur', label: 'اردو', letter: 'ا' }
   ];
 

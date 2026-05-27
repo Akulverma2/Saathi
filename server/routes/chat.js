@@ -65,8 +65,14 @@ router.post('/message', authenticate, async (req, res) => {
     });
 
     const aiMessageId = uuidv4();
-    await db.prepare(`INSERT INTO messages (id, user_id, role, content, language) VALUES (?, ?, 'assistant', ?, ?)`)
-      .run(aiMessageId, userId, aiResponse.text, language);
+    const responseRisk = aiResponse.isCrisis ? 3 : 0;
+    await db.prepare(`INSERT INTO messages (id, user_id, role, content, risk_level, language) VALUES (?, ?, 'assistant', ?, ?, ?)`)
+      .run(aiMessageId, userId, aiResponse.text, responseRisk, language);
+
+    if (aiResponse.isCrisis) {
+      await db.prepare(`INSERT INTO crisis_events (id, user_id, message_id, risk_level, keywords_matched) VALUES (?, ?, ?, 3, ?)`)
+        .run(uuidv4(), userId, aiMessageId, JSON.stringify([{ keyword: 'AI_SAFETY_PASS', level: 3 }]));
+    }
 
     // Asynchronously extract new memories every ~5 messages
     if (history.length % 5 === 0 && history.length > 0) {
@@ -79,6 +85,12 @@ router.post('/message', authenticate, async (req, res) => {
           }
         } catch (memErr) {
           console.error('[Async Memory Extraction Error]', memErr.message);
+          try {
+            await db.prepare('INSERT INTO system_errors (id, user_id, job_type, error_message, payload) VALUES (?, ?, ?, ?, ?)')
+              .run(uuidv4(), userId, 'memory_extraction', memErr.message, JSON.stringify({ historyLength: history.length }));
+          } catch (dbErr) {
+            console.error('[System Error Logging Failed]', dbErr.message);
+          }
         }
       }, 1000);
     }
@@ -87,8 +99,8 @@ router.post('/message', authenticate, async (req, res) => {
       id: aiMessageId,
       content: aiResponse.text,
       role: 'assistant',
-      crisisLevel: crisis.level,
-      requiresImmediate: crisis.requiresImmediate,
+      crisisLevel: Math.max(crisis.level, responseRisk),
+      requiresImmediate: crisis.requiresImmediate || aiResponse.isCrisis,
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
@@ -196,9 +208,21 @@ router.post('/message/stream', authenticate, async (req, res) => {
       res.write(`data: ${JSON.stringify({ token: chunkText })}\n\n`);
     }
 
+    let responseRisk = 0;
+    let cleanFullText = fullText;
+    if (fullText.includes('[CRISIS_ALERT]')) {
+      cleanFullText = fullText.replace('[CRISIS_ALERT]', '').trim();
+      responseRisk = 3;
+    }
+
     const aiMessageId = uuidv4();
-    await db.prepare(`INSERT INTO messages (id, user_id, role, content, language) VALUES (?, ?, 'assistant', ?, ?)`)
-      .run(aiMessageId, userId, fullText, language);
+    await db.prepare(`INSERT INTO messages (id, user_id, role, content, risk_level, language) VALUES (?, ?, 'assistant', ?, ?, ?)`)
+      .run(aiMessageId, userId, cleanFullText, responseRisk, language);
+
+    if (responseRisk === 3) {
+      await db.prepare(`INSERT INTO crisis_events (id, user_id, message_id, risk_level, keywords_matched) VALUES (?, ?, ?, 3, ?)`)
+        .run(uuidv4(), userId, aiMessageId, JSON.stringify([{ keyword: 'AI_SAFETY_PASS', level: 3 }]));
+    }
 
     // Async memory extraction
     if (history.length % 5 === 0 && history.length > 0) {
@@ -211,11 +235,17 @@ router.post('/message/stream', authenticate, async (req, res) => {
           }
         } catch (memErr) {
           console.error('[Async Memory Extraction Error]', memErr.message);
+          try {
+            await db.prepare('INSERT INTO system_errors (id, user_id, job_type, error_message, payload) VALUES (?, ?, ?, ?, ?)')
+              .run(uuidv4(), userId, 'memory_extraction', memErr.message, JSON.stringify({ historyLength: history.length }));
+          } catch (dbErr) {
+            console.error('[System Error Logging Failed]', dbErr.message);
+          }
         }
       }, 1000);
     }
 
-    res.write(`data: ${JSON.stringify({ done: true, id: aiMessageId, content: fullText, crisisLevel: crisis.level })}\n\n`);
+    res.write(`data: ${JSON.stringify({ done: true, id: aiMessageId, content: cleanFullText, crisisLevel: Math.max(crisis.level, responseRisk) })}\n\n`);
     res.end();
   } catch (err) {
     console.error('[Chat Stream Route Error]', err);

@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { initDB, getDB } from './models/database.js';
 import jwt from 'jsonwebtoken';
+import { authenticate } from './middleware/auth.js';
 import authRoutes from './routes/auth.js';
 import chatRoutes from './routes/chat.js';
 import moodRoutes from './routes/mood.js';
@@ -67,7 +68,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Global Platform Statistics Route (Dynamic & Live driven by active database counts)
-app.get('/api/platform/stats', async (req, res) => {
+app.get('/api/platform/stats', authenticate, async (req, res) => {
   try {
     const db = getDB();
     
@@ -85,11 +86,11 @@ app.get('/api/platform/stats', async (req, res) => {
     
     const totalPersistentActions = (moodCount?.count || 0) + (sessionCount?.count || 0) + (journalCount?.count || 0);
 
-    // Dynamic scale driven by active database counts
-    const teensSupported = 18420 + (userCount?.count || 0);
-    const wellnessChats = 124500 + (messageCount?.count || 0);
-    const crisisInterventions = 412 + (crisisCount?.count || 0);
-    const offlineSyncs = 9120 + totalPersistentActions;
+    // Dynamic scale driven by active database counts only (no fake numbers)
+    const teensSupported = userCount?.count || 0;
+    const wellnessChats = messageCount?.count || 0;
+    const crisisInterventions = crisisCount?.count || 0;
+    const offlineSyncs = totalPersistentActions;
 
     res.json({
       teensSupported,

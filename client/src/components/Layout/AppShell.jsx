@@ -1,4 +1,5 @@
-import { Outlet, NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import OfflineIndicator from './OfflineIndicator';
@@ -6,11 +7,95 @@ import OfflineIndicator from './OfflineIndicator';
 export default function AppShell() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  const [showWarning, setShowWarning] = useState(false);
+
+  useEffect(() => {
+    if (user && user.isGuest) {
+      const count = parseInt(localStorage.getItem('saathi_guest_sessions') || '1');
+      const dismissed = localStorage.getItem('saathi_guest_warning_dismissed') === 'true';
+      
+      if (!sessionStorage.getItem('saathi_session_registered')) {
+        const newCount = count + 1;
+        localStorage.setItem('saathi_guest_sessions', newCount.toString());
+        sessionStorage.setItem('saathi_session_registered', 'true');
+        if (newCount >= 2 && !dismissed) {
+          setShowWarning(true);
+        }
+      } else if (count >= 2 && !dismissed) {
+        setShowWarning(true);
+      }
+    }
+  }, [user]);
+
+  const dismissWarning = () => {
+    localStorage.setItem('saathi_guest_warning_dismissed', 'true');
+    setShowWarning(false);
+  };
 
   if (!user) return <Outlet />; // Don't show shell on onboarding
 
   return (
     <div className="app-shell">
+      {showWarning && (
+        <div className="guest-warning-banner" style={{
+          background: 'linear-gradient(135deg, #b45309, #d97706)',
+          color: 'white',
+          padding: '10px 16px',
+          fontSize: '0.85rem',
+          fontWeight: '500',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          animation: 'fadeIn 0.3s ease'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+            <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+            <span>Your data is stored on this device only. Create an account to keep it safe.</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button 
+              onClick={() => navigate('/signup')}
+              style={{
+                background: 'white',
+                color: '#b45309',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '12px',
+                fontSize: '0.78rem',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                transition: 'transform 0.15s'
+              }}
+            >
+              🔒 Secure My History
+            </button>
+            <button 
+              onClick={dismissWarning}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.85)',
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+                padding: '0 4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Dismiss warning"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       <header className="app-header">
         <NavLink to="/" className="app-logo">
           <span className="app-logo-icon">🌿</span>
