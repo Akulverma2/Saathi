@@ -110,16 +110,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('saathi_token');
     localStorage.removeItem('saathi_lang');
     try {
-      const { closeDb } = await import('../services/db');
-      await closeDb();
-      if (window.indexedDB) {
-        await new Promise((resolve, reject) => {
-          const req = window.indexedDB.deleteDatabase('saathi_db');
-          req.onsuccess = resolve;
-          req.onerror = reject;
-          req.onblocked = () => { console.warn('DB delete blocked, proceeding...'); resolve(); };
-        });
-      }
+      const { clearAllStores } = await import('../services/db');
+      await clearAllStores();
     } catch (e) {
       console.error('Failed to clear local DB on logout', e);
     }

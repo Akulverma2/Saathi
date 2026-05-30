@@ -94,11 +94,13 @@ export function useChat(language = 'en') {
 
     try {
       const token = localStorage.getItem('saathi_token');
+      const customKey = localStorage.getItem('saathi_custom_gemini_key') || '';
       const response = await fetch('/api/chat/message/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(customKey ? { 'X-Gemini-Key': customKey } : {})
         },
         body: JSON.stringify({ content: content.trim(), language })
       });

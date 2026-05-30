@@ -62,6 +62,7 @@ router.post('/message', authenticate, async (req, res) => {
         recentMood: recentMood?.mood_score || null,
         memories: memoryFacts
       },
+      customApiKey: req.headers['x-gemini-key'] || null
     });
 
     const aiMessageId = uuidv4();
@@ -182,6 +183,7 @@ router.post('/message/stream', authenticate, async (req, res) => {
         recentMood: recentMood?.mood_score || null,
         memories: memoryFacts
       },
+      customApiKey: req.headers['x-gemini-key'] || null
     });
 
     res.setHeader('Content-Type', 'text/event-stream');

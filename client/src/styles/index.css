@@ -134,6 +134,29 @@
   --shadow-lg:       0 12px 40px rgba(0,0,0,0.4);
 }
 
+/* ── Customized Mode (Warm Peach & Terracotta Sunset) ── */
+[data-theme="customized"] {
+  --color-primary-50:  #fdf6f0;
+  --color-primary-100: #f7e6d8;
+  --color-primary-200: #f1cfb8;
+  --color-primary-300: #eaaf8a;
+  --color-primary-400: #e38d58;
+  --color-primary-500: #d66f2c;
+  --color-primary-600: #b5561a;
+  --color-primary-700: #8a3f11;
+  --color-primary-800: #5e2a09;
+  --color-primary-900: #331503;
+  --surface-bg:        #faf4ee;
+  --surface-card:      #ffffff;
+  --surface-elevated:  #fffdfb;
+  --text-primary:      #4e2e1a;
+  --text-secondary:    #7b5037;
+  --text-muted:        #b08d77;
+  --color-neutral-100: rgba(138, 63, 17, 0.05);
+  --color-neutral-200: rgba(138, 63, 17, 0.1);
+  --shadow-glow:       0 0 24px rgba(214, 111, 44, 0.25);
+}
+
 /* ── Calm Mode (Adaptive for Stress) ────────── */
 [data-theme="calm"] {
   --color-primary-400: #8fd0c2;
@@ -191,14 +214,16 @@ body::before {
   content: '';
   position: fixed;
   top: -50%; left: -50%; width: 200%; height: 200%;
-  background: radial-gradient(circle at 50% 50%, rgba(79, 139, 122, 0.08) 0%, transparent 40%),
-              radial-gradient(circle at 80% 20%, rgba(139, 111, 212, 0.06) 0%, transparent 30%);
+  background: radial-gradient(circle at 50% 50%, var(--color-primary-200) 0%, transparent 40%),
+              radial-gradient(circle at 80% 20%, var(--color-primary-100) 0%, transparent 30%);
   z-index: -1;
   pointer-events: none;
+  opacity: 0.15;
 }
 [data-theme="dark"] body::before {
-  background: radial-gradient(circle at 50% 50%, rgba(79, 139, 122, 0.15) 0%, transparent 40%),
-              radial-gradient(circle at 80% 20%, rgba(139, 111, 212, 0.12) 0%, transparent 30%);
+  background: radial-gradient(circle at 50% 50%, var(--color-primary-300) 0%, transparent 40%),
+              radial-gradient(circle at 80% 20%, var(--color-primary-200) 0%, transparent 30%);
+  opacity: 0.2;
 }
 
 #root {

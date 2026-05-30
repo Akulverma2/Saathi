@@ -15,9 +15,9 @@ function scrubPII(text) {
   return scrubbed;
 }
 
-export async function generateChatResponse({ messages, language = 'en', userContext = {} }) {
+export async function generateChatResponse({ messages, language = 'en', userContext = {}, customApiKey = null }) {
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    const genAI = new GoogleGenerativeAI(customApiKey || process.env.GEMINI_API_KEY || '');
     const systemInstructionText = buildSystemPrompt(language, userContext);
 
     const model = genAI.getGenerativeModel({
@@ -92,9 +92,9 @@ export async function generateChatResponse({ messages, language = 'en', userCont
   }
 }
 
-export async function generateChatResponseStream({ messages, language = 'en', userContext = {} }) {
+export async function generateChatResponseStream({ messages, language = 'en', userContext = {}, customApiKey = null }) {
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    const genAI = new GoogleGenerativeAI(customApiKey || process.env.GEMINI_API_KEY || '');
     const systemInstructionText = buildSystemPrompt(language, userContext);
 
     const model = genAI.getGenerativeModel({
