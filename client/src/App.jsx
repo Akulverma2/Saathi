@@ -14,43 +14,70 @@ const MoodDashboard = React.lazy(() => import('./components/MoodTracker/MoodDash
 const SignIn = React.lazy(() => import('./components/Auth/SignIn'));
 const SignUp = React.lazy(() => import('./components/Auth/SignUp'));
 
-import { useTheme } from './contexts/ThemeContext';
+import { useTheme, FONT_OPTIONS } from './contexts/ThemeContext';
 import { api } from './services/apiClient';
+
+// ── Shared dropdown style used by Font & Language pickers ────────────────────
+const selectStyle = {
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  background: 'var(--surface-card)',
+  border: '1.5px solid var(--color-primary-300)',
+  borderRadius: '12px',
+  padding: '8px 36px 8px 14px',
+  fontSize: '0.88rem',
+  fontWeight: '600',
+  color: 'var(--color-primary-600)',
+  cursor: 'pointer',
+  outline: 'none',
+  minWidth: '155px',
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234f8b7a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 12px center',
+  boxShadow: '0 2px 8px rgba(79,139,122,0.12)',
+  transition: 'border-color 0.15s, box-shadow 0.15s',
+  flexShrink: 0,
+};
+
+// ── All 9 supported languages with native script names ───────────────────────
+const LANGUAGE_OPTIONS = [
+  { code: 'en', label: 'English',   native: 'English'    },
+  { code: 'hi', label: 'Hindi',     native: 'हिंदी'       },
+  { code: 'bn', label: 'Bengali',   native: 'বাংলা'      },
+  { code: 'te', label: 'Telugu',    native: 'తెలుగు'     },
+  { code: 'ta', label: 'Tamil',     native: 'தமிழ்'      },
+  { code: 'mr', label: 'Marathi',   native: 'मराठी'      },
+  { code: 'kn', label: 'Kannada',   native: 'ಕನ್ನಡ'     },
+  { code: 'gu', label: 'Gujarati',  native: 'ગુજરાતી'   },
+  { code: 'ur', label: 'Urdu',      native: 'اردو'       },
+];
 
 function ProfilePage() {
   const { user, logout, updatePreferences } = useAuth();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { theme, setTheme, customHue, setCustomHue, lowBandwidth, setLowBandwidth, calmMode, setCalmMode } = useTheme();
+  const { theme, setTheme, customHue, setCustomHue, lowBandwidth, setLowBandwidth, calmMode, setCalmMode, fontId, setFontId } = useTheme();
 
   const [editing, setEditing] = useState(false);
   const [newNickname, setNewNickname] = useState('');
-  const [newLang, setNewLang] = useState('en');
+  const [newLang, setNewLang] = useState(() => localStorage.getItem('saathi_lang') || 'en');
   const [newVoice, setNewVoice] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [customApiKey, setCustomApiKeyState] = useState(() => localStorage.getItem('saathi_custom_gemini_key') || '');
 
-  const languages = [
-    { code: 'en', label: 'English' },
-    { code: 'hi', label: 'हिंदी' },
-    { code: 'bn', label: 'বাংলা' },
-    { code: 'te', label: 'తెలుగు' },
-    { code: 'ta', label: 'தமிழ்' },
-    { code: 'mr', label: 'मराठी' },
-    { code: 'kn', label: 'ಕನ್ನಡ' },
-    { code: 'gu', label: 'ગુજરાતી' },
-    { code: 'ur', label: 'اردو' }
-  ];
+  // language list is now the module-level LANGUAGE_OPTIONS constant
 
   // Sync state with loaded user profile
   useEffect(() => {
     if (user) {
       setNewNickname(user.nickname || '');
-      setNewLang(user.language || 'en');
+      // Prefer the live i18n language (set by the Display Settings picker),
+      // then fall back to the saved profile language
+      setNewLang(i18n.language || user.language || localStorage.getItem('saathi_lang') || 'en');
       setNewVoice(user.voice_preference ? true : false);
     }
-  }, [user]);
+  }, [user, i18n.language]);
 
   const handleLogout = () => {
     logout();
@@ -402,7 +429,7 @@ function ProfilePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontWeight: '500' }}>🌐 Language:</span>
                   <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
-                    {languages.find(l => l.code === user?.language)?.label || 'English'}
+                    {LANGUAGE_OPTIONS.find(l => l.code === (i18n.language || user?.language))?.native || 'English'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -454,18 +481,16 @@ function ProfilePage() {
                   value={newLang}
                   onChange={(e) => setNewLang(e.target.value)}
                   style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    borderRadius: '12px',
-                    padding: '10px',
-                    color: 'white',
-                    border: '1.5px solid rgba(255,255,255,0.15)',
+                    ...selectStyle,
+                    minWidth: 'unset',
+                    width: '100%',
+                    padding: '10px 36px 10px 14px',
                     fontSize: '0.9rem',
-                    outline: 'none'
                   }}
                 >
-                  {languages.map((l) => (
-                    <option key={l.code} value={l.code} style={{ background: '#1e293b', color: 'white' }}>
-                      {l.label}
+                  {LANGUAGE_OPTIONS.map((l) => (
+                    <option key={l.code} value={l.code}>
+                      {l.native} — {l.label}
                     </option>
                   ))}
                 </select>
@@ -689,6 +714,75 @@ function ProfilePage() {
                 style={{ width: '22px', height: '22px', accentColor: 'var(--color-primary-500)', cursor: 'pointer' }}
               />
             </label>
+          </div>
+
+          {/* ── Font Style — single dropdown row ── */}
+          <div style={{
+            paddingTop: '10px',
+            borderTop: '1.5px solid rgba(255,255,255,0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '600' }}>
+                🔤 Font Style
+              </span>
+              <span style={{
+                fontSize: '0.74rem',
+                color: 'var(--text-muted)',
+                fontFamily: FONT_OPTIONS.find(f => f.id === fontId)?.stack,
+              }}>
+                {FONT_OPTIONS.find(f => f.id === fontId)?.label}
+              </span>
+            </div>
+
+            <select
+              value={fontId}
+              onChange={e => setFontId(e.target.value)}
+              style={selectStyle}
+            >
+              {FONT_OPTIONS.map(f => (
+                <option key={f.id} value={f.id}>
+                  {f.label} — {f.category}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* ── Language — single dropdown row ── */}
+          <div style={{
+            paddingTop: '10px',
+            borderTop: '1.5px solid rgba(255,255,255,0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '600' }}>
+                🌐 Language
+              </span>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                {LANGUAGE_OPTIONS.find(l => l.code === i18n.language)?.native || 'English'}
+              </span>
+            </div>
+
+            <select
+              value={i18n.language}
+              onChange={e => {
+                i18n.changeLanguage(e.target.value);
+                localStorage.setItem('saathi_lang', e.target.value);
+              }}
+              style={selectStyle}
+            >
+              {LANGUAGE_OPTIONS.map(l => (
+                <option key={l.code} value={l.code}>
+                  {l.native} — {l.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

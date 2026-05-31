@@ -169,9 +169,36 @@ export default function MessageBubble({ message }) {
 
   return (
     <div className={`message-row ${isUser ? 'user' : 'assistant'}`}>
-      {!isUser && <div className="message-avatar">🌿</div>}
+      {/* AI avatar — left side */}
+      {!isUser && (
+        <div className="message-avatar assistant-avatar">🌿</div>
+      )}
+
+      <div className="message-content-wrapper" style={isUser ? { alignItems: 'flex-end' } : { alignItems: 'flex-start' }}>
+        <div className={`message-bubble ${isUser ? 'user' : 'assistant'}`}>
+          <div>{message.content}</div>
+          {activityButton}
+        </div>
+
+        <div className={`flex items-center gap-2 mt-1 ${isUser ? 'msg-meta-right' : 'msg-meta-left'}`}>
+          {!isUser && isSupported && (
+            <button
+              className="tts-btn"
+              onClick={() => speak(message.content)}
+              title={t('read_aloud')}
+              aria-label="Read message aloud"
+            >
+              🔊
+            </button>
+          )}
+          <span className="message-time">{timeString}</span>
+          {isUser && !message.synced && <span className="message-time" title="Pending sync">⏳</span>}
+        </div>
+      </div>
+
+      {/* User avatar — right side */}
       {isUser && (
-        <div className="message-avatar" style={{
+        <div className="message-avatar user-avatar" style={{
           background: user?.avatar ? 'transparent' : 'linear-gradient(135deg, var(--color-secondary-400), var(--color-primary-400))',
           overflow: 'hidden'
         }}>
@@ -180,28 +207,6 @@ export default function MessageBubble({ message }) {
           ) : '👤'}
         </div>
       )}
-      
-      <div className="message-content-wrapper" style={isUser ? { alignItems: 'flex-end' } : { alignItems: 'flex-start' }}>
-        <div className={`message-bubble ${isUser ? 'user' : 'assistant'}`}>
-          <div>{message.content}</div>
-          {activityButton}
-        </div>
-        
-        <div className="flex items-center gap-2 mt-1">
-          <span className="message-time">{timeString}</span>
-          {!isUser && isSupported && (
-            <button 
-              className="tts-btn" 
-              onClick={() => speak(message.content)}
-              title={t('read_aloud')}
-              aria-label="Read message aloud"
-            >
-              🔊
-            </button>
-          )}
-          {isUser && !message.synced && <span className="message-time" title="Pending sync">⏳</span>}
-        </div>
-      </div>
     </div>
   );
 }

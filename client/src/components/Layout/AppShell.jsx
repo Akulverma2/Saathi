@@ -6,6 +6,7 @@ import { api } from '../../services/apiClient';
 import { v4 as uuidv4 } from 'uuid';
 import OfflineIndicator from './OfflineIndicator';
 import { saveMood } from '../../services/db';
+import DailyWelcomePopup from './DailyWelcomePopup';
 
 export default function AppShell() {
   const { t } = useTranslation();
@@ -14,59 +15,7 @@ export default function AppShell() {
   
   const [showWarning, setShowWarning] = useState(false);
 
-  const [showDailyPopup, setShowDailyPopup] = useState(false);
-  const [dailyMoodStep, setDailyMoodStep] = useState('select'); // 'select' | 'good' | 'bad'
-  const [dailyMoodNote, setDailyMoodNote] = useState('');
-  const [isSavingDailyMood, setIsSavingDailyMood] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      const today = new Date().toLocaleDateString('en-CA');
-      const lastPopupDate = localStorage.getItem('saathi_last_daily_popup');
-      
-      if (!lastPopupDate) {
-        // Initial setup for new users to prevent immediate popup on Day 1
-        localStorage.setItem('saathi_last_daily_popup', today);
-      } else if (lastPopupDate !== today) {
-        setShowDailyPopup(true);
-      }
-    }
-  }, [user]);
-
-  const handleSaveDailyMood = async (score, note = '', talkToBot = false) => {
-    if (!user) return;
-    setIsSavingDailyMood(true);
-    
-    const today = new Date().toLocaleDateString('en-CA');
-    const entry = {
-      id: uuidv4(),
-      mood_score: score,
-      note: note || (score === 5 ? 'Daily Check-in: Good' : 'Daily Check-in: Bad'),
-      tags: score === 5 ? ['good', 'peaceful', 'joy'] : ['bad'],
-      created_at: new Date().toISOString()
-    };
-    
-    try {
-      await saveMood(entry);
-      try {
-        await api.checkIn(entry);
-      } catch (err) {
-        console.warn('Sync failed (offline):', err);
-      }
-      localStorage.setItem('saathi_last_daily_popup', today);
-      setShowDailyPopup(false);
-      setDailyMoodStep('select');
-      setDailyMoodNote('');
-      
-      if (talkToBot) {
-        navigate('/chat');
-      }
-    } catch (error) {
-      console.error('Failed to save daily mood check-in:', error);
-    } finally {
-      setIsSavingDailyMood(false);
-    }
-  };
+  // Daily popup is now handled by <DailyWelcomePopup />
 
   useEffect(() => {
     if (user && (user.isGuest || !user.username)) {
@@ -216,94 +165,8 @@ export default function AppShell() {
         </NavLink>
       </nav>
 
-      {showDailyPopup && (
-        <div className="daily-popup-overlay">
-          <div className="daily-popup-card">
-            {dailyMoodStep === 'select' && (
-              <>
-                <button 
-                  className="daily-popup-close" 
-                  onClick={() => setShowDailyPopup(false)}
-                  title="Dismiss check-in"
-                  disabled={isSavingDailyMood}
-                >
-                  &times;
-                </button>
-                <div className="daily-popup-header">
-                  <h2>Today's Mood Check-in 🌿</h2>
-                  <p>How are you feeling today?</p>
-                </div>
-                <div className="daily-mood-options">
-                  <button 
-                    className="daily-mood-btn good"
-                    onClick={() => setDailyMoodStep('good')}
-                    disabled={isSavingDailyMood}
-                  >
-                    <span className="daily-mood-emoji">😊</span>
-                    <span className="daily-mood-label">Good</span>
-                  </button>
-                  <button 
-                    className="daily-mood-btn bad"
-                    onClick={() => setDailyMoodStep('bad')}
-                    disabled={isSavingDailyMood}
-                  >
-                    <span className="daily-mood-emoji">😔</span>
-                    <span className="daily-mood-label">Bad</span>
-                  </button>
-                </div>
-              </>
-            )}
-
-            {dailyMoodStep === 'good' && (
-              <div className="daily-response-view">
-                <span className="daily-response-icon">🌿</span>
-                <p className="daily-response-text">
-                  That's great! May your day be good, peaceful, and filled with joy.
-                </p>
-                <button 
-                  className="btn-good-path"
-                  onClick={() => handleSaveDailyMood(5)}
-                  disabled={isSavingDailyMood}
-                >
-                  {isSavingDailyMood ? 'Saving...' : 'Thank you 🌸'}
-                </button>
-              </div>
-            )}
-
-            {dailyMoodStep === 'bad' && (
-              <div className="daily-response-view">
-                <span className="daily-response-icon">😔</span>
-                <p className="daily-response-text">
-                  Oh, I'm so sorry. What happened?
-                </p>
-                <textarea
-                  className="daily-textarea"
-                  value={dailyMoodNote}
-                  onChange={(e) => setDailyMoodNote(e.target.value)}
-                  placeholder="Would you like to write about it? (optional)..."
-                  disabled={isSavingDailyMood}
-                />
-                <div className="daily-action-btns">
-                  <button 
-                    className="btn-bad-path-primary"
-                    onClick={() => handleSaveDailyMood(2, dailyMoodNote, true)}
-                    disabled={isSavingDailyMood}
-                  >
-                    {isSavingDailyMood ? 'Saving...' : "Yes, let's talk 💬"}
-                  </button>
-                  <button 
-                    className="btn-bad-path-secondary"
-                    onClick={() => handleSaveDailyMood(2, dailyMoodNote, false)}
-                    disabled={isSavingDailyMood}
-                  >
-                    {isSavingDailyMood ? 'Saving...' : 'Just browsing 🌸'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Daily Thought + Mood Check-in — shown once per day */}
+      <DailyWelcomePopup userName={user?.nickname} />
     </div>
   );
 }

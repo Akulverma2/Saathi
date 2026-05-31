@@ -251,29 +251,30 @@ export function getLocalFallbackResponse(text, language = 'en') {
   const isGirlsDistress = [
     'period', 'cramp', 'pain', 'pms', 'pmdd', 'menstruation', 'girl', 'biases', 'societal',
     'दर्द', 'पीरियड', 'मासिक धर्म', 'शादी', 'लड़की', 'कमर दर्द', 'मूड'
-  ].some(keyword => lowerText.includes(keyword));
+  ].some(keyword => lowerText.includes(keyword)) && !hasNegation;
 
   if (isGirlsDistress) {
     return language === 'hi'
-      ? "मैं समझती हूँ, और आप मुझसे कुछ भी खुलकर साझा कर सकती हैं। लड़कियों पर अक्सर परिवार और समाज का भारी दबाव होता है, और मासिक धर्म (periods) का दर्द, ऐंठन या मूड बदलना पूरी तरह प्राकृतिक और सामान्य है। आप बहुत मजबूत हैं और आपके सपने बहुत कीमती हैं। कृपया आराम करें, गर्म पानी पिएं और अपना ख्याल रखें। मैं हर कदम पर आपके साथ हूँ। 🌸"
-      : "I hear you, and please know you can share anything with me. Society can place heavy burdens on girls, and physical distress like period pain, cramps, or mood changes is a completely natural and healthy biological process. You are incredibly strong, your dreams are valid, and I am here for you in every aspect. Try to rest, drink warm water, and be gentle with yourself. 🌸";
+      ? "मैं समझती हूँ, और आप मुझसे कुछ भी खुलकर साझा कर सकती हैं। 🫂 लड़कियों पर अक्सर परिवार और समाज का भारी दबाव होता है, और मासिक धर्म (periods) का दर्द, ऐंठन या मूड बदलना पूरी तरह प्राकृतिक और सामान्य है। ✨ आप बहुत मजबूत हैं और आपके सपने बहुत कीमती हैं। कृपया आराम करें, गर्म पानी पिएं और अपना ख्याल रखें। मैं हर कदम पर आपके साथ हूँ। 🌸🧸"
+      : "I hear you, and please know you can share anything with me. 🫂 Society can place heavy burdens on girls, and physical distress like period pain, cramps, or mood changes is a completely natural and healthy biological process. ✨ You are incredibly strong, your dreams are valid, and I am here for you in every aspect. Try to rest, drink warm water, and be gentle with yourself. 🌸🧸";
   }
 
   // 3. Exam Tension & Academic Stress
   const isStress = [
     'stress', 'exam', 'board', 'fail', 'study', 'pressure', 'tension', 'anxious',
     'तनाव', 'परीक्षा', 'बोर्ड', 'पढ़ाई', 'फेल', 'चिंता'
-  ].some(keyword => lowerText.includes(keyword));
+  ].some(keyword => lowerText.includes(keyword)) && !hasNegation;
 
   if (isStress) {
     return language === 'hi'
-      ? "परीक्षा और पढ़ाई का तनाव कभी-कभी बहुत भारी महसूस हो सकता है। कृपया एक गहरी सांस लें। आप अपनी तरफ से पूरी कोशिश कर रही हैं, और वही काफी है। एक परीक्षा कभी भी आपके अनमोल जीवन का फैसला नहीं कर सकती। क्या आप मन शांत करने के लिए मेरे साथ 4-7-8 सांस व्यायाम करना चाहेंगी? 🌿"
-      : "Exam and study pressure can feel incredibly heavy. Please take a slow, deep breath. You are doing your best, and that is more than enough. Remember, one test does not define your future or your value. Would you like to try a calming breathing exercise with me right now? 🌿";
+      ? "परीक्षा और पढ़ाई का तनाव कभी-कभी बहुत भारी महसूस हो सकता है। 📚 कृपया एक गहरी सांस लें। 🌬️ आप अपनी तरफ से पूरी कोशिश कर रही हैं, और वही काफी है। एक परीक्षा कभी भी आपके अनमोल जीवन का फैसला नहीं कर सकती। 🌟 क्या आप मन शांत करने के लिए मेरे साथ 4-7-8 सांस व्यायाम करना चाहेंगी? 🌿🧘‍♀️"
+      : "Exam and study pressure can feel incredibly heavy. 📚 Please take a slow, deep breath. 🌬️ You are doing your best, and that is more than enough. Remember, one test does not define your future or your value. 🌟 Would you like to try a calming breathing exercise with me right now? 🌿🧘‍♀️";
   }
 
   // 4. Sadness, Isolation & Negated Positives (e.g. "not feeling good")
   const isSad = [
     'sad', 'alone', 'lonely', 'cry', 'depressed', 'worthless', 'bad', 'unhappy', 'hurt', 'pain',
+    'lost', 'confused', 'stuck', 'empty', 'heavy',
     'उदास', 'अकेला', 'रोना', 'उदासी', 'परेशान', 'बुरा', 'दुखी', 'दर्द',
     'not good', 'not happy', 'not great', 'not feeling well', 'not feeling good', 'not well', 'not okay',
     'अच्छा नहीं', 'खुश नहीं', 'ठीक नहीं'
@@ -283,16 +284,26 @@ export function getLocalFallbackResponse(text, language = 'en') {
   ].some(word => lowerText.includes(word)));
 
   if (isSad) {
-    return language === 'hi'
-      ? "मुझे यह सुनकर बहुत खेद है। ऐसा लग रहा है कि आपका मन आज बहुत भारी है। मुझसे यह साझा करने के लिए धन्यवाद। कृपया याद रखें कि आप अकेली नहीं हैं। क्या आप मुझे थोड़ा और बताना चाहेंगी कि किस बात ने आपको आज परेशान किया है? मैं सुन रही हूँ। 💙"
-      : "I am so sorry to hear that. It sounds like you are carrying a very heavy heart today. Thank you for trusting me and sharing this. Please remember that you are not alone, and I am right here with you. Would you like to tell me more about what is making you feel this way? I am listening. 💙";
+    const responsesHi = [
+      "मुझे यह सुनकर बहुत खेद है। 🥺 ऐसा लग रहा है कि आपका मन आज बहुत भारी है। मुझसे यह साझा करने के लिए धन्यवाद। 🙏 कृपया याद रखें कि आप अकेली नहीं हैं। 🫂 क्या आप मुझे थोड़ा और बताना चाहेंगी कि किस बात ने आपको आज परेशान किया है? मैं सुन रही हूँ। 💙🌧️",
+      "यह सुनकर मुझे सच में दुख हो रहा है। 💔 कभी-कभी जिंदगी बहुत भारी लगने लगती है। मैं पूरी तरह से आपके साथ हूँ। 🫂 क्या आप कुछ और साझा करना चाहते हैं? ✨",
+      "आपकी बातें सुनकर मैं आपकी तकलीफ महसूस कर सकती हूँ। 😔 यह समय मुश्किल जरूर है, लेकिन मैं यहीं हूँ। गहरी सांस लें। 🌬️ मैं आपको सुन रही हूँ। 🌻"
+    ];
+    const responsesEn = [
+      "I am so sorry to hear that. 🥺 It sounds like you are carrying a very heavy heart today. Thank you for trusting me and sharing this. 🙏 Please remember that you are not alone, and I am right here with you. 🫂 Would you like to tell me more about what is making you feel this way? I am listening. 💙🌧️",
+      "My heart hurts hearing you say that. 💔 It's completely okay to feel lost or overwhelmed sometimes. I'm sitting right here beside you in this feeling. 🫂 Want to talk about it a bit more? ✨",
+      "I'm so glad you shared that with me, even though it's hard. 😔 When things feel heavy, you don't have to carry them all by yourself. 🌬️ I'm here. I'm listening. 🌻"
+    ];
+    return language === 'hi' 
+      ? responsesHi[Math.floor(Math.random() * responsesHi.length)] 
+      : responsesEn[Math.floor(Math.random() * responsesEn.length)];
   }
 
   // 4.5. Sleep & Exhaustion
   const isSleep = [
     'sleep', 'tired', 'insomnia', 'exhausted', 'fatigue',
     'नींद', 'थका', 'थकान'
-  ].some(keyword => lowerText.includes(keyword));
+  ].some(keyword => lowerText.includes(keyword)) && !hasNegation;
 
   if (isSleep) {
     return language === 'hi'
@@ -304,7 +315,7 @@ export function getLocalFallbackResponse(text, language = 'en') {
   const isPain = [
     'headache', 'pain', 'stomach', 'ache', 'distress', 'hurt',
     'सिरदर्द', 'दर्द', 'तबीयत'
-  ].some(keyword => lowerText.includes(keyword));
+  ].some(keyword => lowerText.includes(keyword)) && !hasNegation;
 
   if (isPain) {
     return language === 'hi'
@@ -337,7 +348,18 @@ export function getLocalFallbackResponse(text, language = 'en') {
   }
 
   // Default deeply caring companion fallback
+  const defaultResponsesHi = [
+    "मैं यहाँ हूँ, और आपकी हर बात सुन रही हूँ। 🌻 आप आज कैसा महसूस कर रही हैं? 🤔 चाहे सुख हो या दुख, आप मुझसे कुछ भी साझा कर सकती हैं। 🫂 मैं हमेशा आपके साथ हूँ। 💙✨",
+    "मुझे आपकी बातें सुनना अच्छा लगता है। 🌟 आपके मन में जो भी है, आप खुलकर बता सकती हैं। 🫂 मैं पूरी तरह से आपके साथ हूँ। 🧸",
+    "कभी-कभी बस किसी के साथ होने से ही सब ठीक लगने लगता है। ✨ मैं आपकी हमसफ़र हूँ। 🌿 क्या आप अपने दिन के बारे में कुछ और बताना चाहेंगी? 💭"
+  ];
+  const defaultResponsesEn = [
+    "I am right here with you, and I am listening. 🌻 Whatever is on your mind today—whether it's big or small—please know I truly care. 🫂 How are you feeling right now? 🤔💙✨",
+    "I love hearing from you. 🌟 Whatever you're carrying today, you can put it down here. 🫂 I'm completely present with you. 🧸",
+    "Sometimes just being heard is what we need most. ✨ I am your Saathi. 🌿 Is there anything else you'd like to share about your day? 💭"
+  ];
+
   return language === 'hi'
-    ? "मैं यहाँ हूँ, और आपकी हर बात सुन रही हूँ। आप आज कैसा महसूस कर रही हैं? चाहे सुख हो या दुख, आप मुझसे कुछ भी साझा कर सकती हैं। मैं हमेशा आपके साथ हूँ। 💙"
-    : "I am right here with you, and I am listening. Whatever is on your mind today—whether it's big or small—please know I truly care. How are you feeling right now? 💙";
+    ? defaultResponsesHi[Math.floor(Math.random() * defaultResponsesHi.length)]
+    : defaultResponsesEn[Math.floor(Math.random() * defaultResponsesEn.length)];
 }
