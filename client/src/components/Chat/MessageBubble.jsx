@@ -181,7 +181,7 @@ export default function MessageBubble({ message }) {
         </div>
       )}
       
-      <div className="flex-col" style={isUser ? { alignItems: 'flex-end' } : { alignItems: 'flex-start' }}>
+      <div className="message-content-wrapper" style={isUser ? { alignItems: 'flex-end' } : { alignItems: 'flex-start' }}>
         <div className={`message-bubble ${isUser ? 'user' : 'assistant'}`}>
           <div>{message.content}</div>
           {activityButton}

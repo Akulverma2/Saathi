@@ -21,7 +21,7 @@ function ProfilePage() {
   const { user, logout, updatePreferences } = useAuth();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { lowBandwidth, setLowBandwidth, calmMode, setCalmMode } = useTheme();
+  const { theme, setTheme, customHue, setCustomHue, lowBandwidth, setLowBandwidth, calmMode, setCalmMode } = useTheme();
 
   const [editing, setEditing] = useState(false);
   const [newNickname, setNewNickname] = useState('');
@@ -29,6 +29,7 @@ function ProfilePage() {
   const [newVoice, setNewVoice] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [customApiKey, setCustomApiKeyState] = useState(() => localStorage.getItem('saathi_custom_gemini_key') || '');
 
   const languages = [
     { code: 'en', label: 'English' },
@@ -502,28 +503,193 @@ function ProfilePage() {
         </div>
 
         {/* Device Modes and Custom System Toggles */}
-        <div className="card" style={{ marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.25rem' }}>
+        <div className="card" style={{ marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.1rem', padding: '1.25rem' }}>
           <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)', fontWeight: '700', borderBottom: '1.5px solid rgba(255,255,255,0.08)', paddingBottom: '6px' }}>
             ⚙️ Display Settings
           </h3>
-          <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-            <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '500' }}>📶 Low Bandwidth Mode (Fast)</span>
-            <input 
-              type="checkbox" 
-              checked={lowBandwidth} 
-              onChange={(e) => setLowBandwidth(e.target.checked)} 
-              style={{ width: '22px', height: '22px', accentColor: 'var(--color-primary-500)', cursor: 'pointer' }}
-            />
-          </label>
-          <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-            <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '500' }}>🧘 Calm UI Mode</span>
-            <input 
-              type="checkbox" 
-              checked={calmMode} 
-              onChange={(e) => setCalmMode(e.target.checked)} 
-              style={{ width: '22px', height: '22px', accentColor: 'var(--color-primary-500)', cursor: 'pointer' }}
-            />
-          </label>
+          
+          {/* Theme Selector Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '600' }}>🎨 Theme Option</span>
+            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+              {['light', 'dark', 'customized'].map((tOpt) => {
+                const isSelected = theme === tOpt;
+                return (
+                  <button
+                    type="button"
+                    key={tOpt}
+                    onClick={() => setTheme(tOpt)}
+                    style={{
+                      flex: 1,
+                      padding: '10px 6px',
+                      borderRadius: '12px',
+                      fontSize: '0.82rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      textTransform: 'capitalize',
+                      border: isSelected ? '2px solid var(--color-primary-500)' : '1.5px solid var(--color-neutral-200)',
+                      background: isSelected ? 'rgba(79, 139, 122, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      color: 'var(--text-primary)',
+                      transition: 'all 0.2s',
+                      boxShadow: isSelected ? 'var(--shadow-sm)' : 'none',
+                      outline: 'none'
+                    }}
+                  >
+                    {tOpt === 'customized' ? '🎨 Custom' : tOpt === 'light' ? '☀️ Light' : '🌙 Dark'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* HSL Hue Customizer (Visible ONLY when customized theme is chosen) */}
+          {theme === 'customized' && (
+            <div className="animate-fade-in" style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '10px', 
+              padding: '12px', 
+              borderRadius: '16px', 
+              background: 'var(--color-neutral-100)',
+              border: '1px solid var(--color-neutral-200)'
+            }}>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-primary)', fontWeight: '600', display: 'flex', justifyContent: 'space-between' }}>
+                <span>🎯 Select Custom Color Accent</span>
+                <span style={{ color: 'var(--color-primary-500)', fontWeight: 'bold' }}>Hue: {customHue}°</span>
+              </span>
+
+              {/* Predefined Color Accents */}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', margin: '4px 0' }}>
+                {[
+                  { name: 'Terracotta', hue: 25, color: '#d66f2c' },
+                  { name: 'Forest', hue: 160, color: '#35a08c' },
+                  { name: 'Ocean', hue: 200, color: '#4fc3f7' },
+                  { name: 'Lavender', hue: 265, color: '#8b6fd4' },
+                  { name: 'Rose', hue: 340, color: '#e57373' }
+                ].map((preset) => (
+                  <button
+                    type="button"
+                    key={preset.hue}
+                    onClick={() => setCustomHue(preset.hue)}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: preset.color,
+                      border: customHue === preset.hue ? '3px solid var(--text-primary)' : '1.5px solid white',
+                      cursor: 'pointer',
+                      boxShadow: 'var(--shadow-sm)',
+                      transform: customHue === preset.hue ? 'scale(1.15)' : 'none',
+                      transition: 'all 0.2s',
+                      outline: 'none'
+                    }}
+                    title={preset.name}
+                  />
+                ))}
+              </div>
+
+              {/* Color range slider */}
+              <input 
+                type="range"
+                min="0"
+                max="360"
+                value={customHue}
+                onChange={(e) => setCustomHue(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: 'linear-gradient(to right, red, orange, yellow, green, cyan, blue, purple, red)',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  outline: 'none'
+                }}
+              />
+            </div>
+          )}
+
+          {/* Custom Gemini API Key Panel */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '8px', 
+            paddingTop: '10px', 
+            borderTop: '1px solid rgba(255,255,255,0.08)' 
+          }}>
+            <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              🔑 Custom Gemini API Key
+            </span>
+            <p style={{ margin: 0, fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+              If the default AI chat runs out of daily quota (quota exceeded error), paste your own free Gemini API key below to restore active chat instantly.
+            </p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                type="password"
+                className="input"
+                placeholder="Paste AIzaSy... API key"
+                value={customApiKey}
+                onChange={(e) => {
+                  const val = e.target.value.trim();
+                  setCustomApiKeyState(val);
+                  localStorage.setItem('saathi_custom_gemini_key', val);
+                }}
+                style={{ 
+                  background: 'rgba(255,255,255,0.08)', 
+                  borderRadius: '12px', 
+                  padding: '10px',
+                  fontSize: '0.85rem',
+                  flex: 1
+                }}
+              />
+              {customApiKey && (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    setCustomApiKeyState('');
+                    localStorage.removeItem('saathi_custom_gemini_key');
+                  }}
+                  style={{ 
+                    padding: '8px 12px', 
+                    borderRadius: '12px', 
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    background: 'rgba(229, 115, 115, 0.1)',
+                    color: 'var(--color-danger)',
+                    border: '1.5px solid var(--color-danger)'
+                  }}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {customApiKey && (
+              <span style={{ fontSize: '0.72rem', color: 'var(--color-success)', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                ✨ Active Key Saved Locally! Saathi is ready to chat.
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '6px' }}>
+            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '500' }}>📶 Low Bandwidth Mode (Fast)</span>
+              <input 
+                type="checkbox" 
+                checked={lowBandwidth} 
+                onChange={(e) => setLowBandwidth(e.target.checked)} 
+                style={{ width: '22px', height: '22px', accentColor: 'var(--color-primary-500)', cursor: 'pointer' }}
+              />
+            </label>
+            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '500' }}>🧘 Calm UI Mode</span>
+              <input 
+                type="checkbox" 
+                checked={calmMode} 
+                onChange={(e) => setCalmMode(e.target.checked)} 
+                style={{ width: '22px', height: '22px', accentColor: 'var(--color-primary-500)', cursor: 'pointer' }}
+              />
+            </label>
+          </div>
         </div>
 
         {/* Safe Logout & Delete Operations */}

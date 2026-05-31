@@ -124,3 +124,13 @@ export async function closeDb() {
     dbPromise = null;
   }
 }
+
+export async function clearAllStores() {
+  const db = await getDb();
+  const stores = ['messages', 'moods', 'journals', 'syncQueue', 'userProfile'];
+  for (const store of stores) {
+    if (db.objectStoreNames.contains(store)) {
+      await db.clear(store);
+    }
+  }
+}

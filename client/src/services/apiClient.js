@@ -23,9 +23,11 @@ async function fetchWithRetry(url, options, retries = 3, backoff = 1000) {
 
 async function request(path, options = {}) {
   const token = getToken();
+  const customKey = typeof window !== 'undefined' ? localStorage.getItem('saathi_custom_gemini_key') : null;
   const headers = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(customKey ? { 'X-Gemini-Key': customKey } : {}),
     ...options.headers,
   };
 

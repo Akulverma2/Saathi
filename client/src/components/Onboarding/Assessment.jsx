@@ -24,11 +24,12 @@ export default function Assessment() {
   }, [user]);
 
   const moodOptions = [
-    { score: 1, label: t('mood_1') || 'Very sad', emoji: '😭', color: 'rgba(229, 115, 115, 0.18)', borderColor: 'var(--mood-1)' },
-    { score: 2, label: t('mood_2') || 'Sad', emoji: '😢', color: 'rgba(255, 183, 77, 0.18)', borderColor: 'var(--mood-2)' },
-    { score: 3, label: t('mood_3') || 'Okay', emoji: '😐', color: 'rgba(255, 241, 118, 0.18)', borderColor: 'var(--mood-3)' },
-    { score: 4, label: t('mood_4') || 'Good', emoji: '🙂', color: 'rgba(129, 199, 132, 0.18)', borderColor: 'var(--mood-4)' },
-    { score: 5, label: t('mood_5') || 'Great', emoji: '😁', color: 'rgba(77, 208, 225, 0.18)', borderColor: 'var(--mood-5)' },
+    { score: 1, label: 'depressed', emoji: '😭', color: 'rgba(229, 115, 115, 0.18)', borderColor: 'var(--mood-1)' },
+    { score: 2, label: 'anxious', emoji: '😰', color: 'rgba(255, 183, 77, 0.18)', borderColor: 'var(--mood-2)' },
+    { score: 3, label: 'stressed', emoji: '😫', color: 'rgba(244, 164, 96, 0.18)', borderColor: 'var(--color-accent-300)' },
+    { score: 4, label: 'low', emoji: '😔', color: 'rgba(120, 150, 180, 0.18)', borderColor: 'var(--color-neutral-400)' },
+    { score: 5, label: 'happy', emoji: '😊', color: 'rgba(129, 199, 132, 0.18)', borderColor: 'var(--mood-4)' },
+    { score: 6, label: 'very happy', emoji: '🥳', color: 'rgba(77, 208, 225, 0.18)', borderColor: 'var(--mood-5)' },
   ];
 
   const goalOptions = [
@@ -39,7 +40,8 @@ export default function Assessment() {
     { id: 'sleep', label: t('mood_tag_sleep') || 'Sleep', emoji: '😴' },
     { id: 'health', label: t('mood_tag_health') || 'Health', emoji: '🩺' },
     { id: 'loneliness', label: t('mood_tag_loneliness') || 'Loneliness', emoji: '🌧️' },
-    { id: 'stress', label: t('quick_anxious') || 'Stress/Anxiety', emoji: '😰' },
+    { id: 'stressed', label: 'stressed', emoji: '😫' },
+    { id: 'feeling_low', label: 'feeling low', emoji: '😔' },
   ];
 
   const handleGoalToggle = (goalId) => {
@@ -282,9 +284,9 @@ export default function Assessment() {
             style={{ 
               flex: 1, 
               borderRadius: '24px', 
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1.5px solid rgba(255, 255, 255, 0.15)',
-              color: 'white',
+              background: 'rgba(120, 120, 120, 0.15)',
+              border: '1.5px solid var(--color-neutral-300)',
+              color: 'var(--text-primary)',
               cursor: 'pointer',
               fontWeight: '600',
               outline: 'none',
