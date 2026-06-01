@@ -96,10 +96,17 @@ export default function MoodDashboard() {
   }, {});
 
   const tagData = Object.entries(tagCounts)
-    .map(([name, count]) => ({ 
-      name: t(name) || name, // Translate tag dynamically for multilingual support!
-      count 
-    }))
+    .map(([name, count]) => {
+      let displayName = t(name) || name;
+      if (displayName === name) {
+        // Fallback: remove "mood_tag_", replace underscores with spaces, Title Case
+        displayName = name.replace(/^mood_tag_/, '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      }
+      return { 
+        name: displayName,
+        count 
+      };
+    })
     .sort((a, b) => b.count - a.count)
     .slice(0, 5); // top 5 tags
 
@@ -313,59 +320,126 @@ export default function MoodDashboard() {
                     <AreaChart data={timeline} margin={{ top: 10, right: 10, bottom: 5, left: -20 }}>
                       <defs>
                         <linearGradient id="moodAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--color-primary-400)" stopOpacity={0.35} />
-                          <stop offset="95%" stopColor="var(--color-primary-400)" stopOpacity={0.0} />
+                          <stop offset="5%"  stopColor="var(--color-primary-400)" stopOpacity={0.35} />
+                          <stop offset="95%" stopColor="var(--color-primary-400)" stopOpacity={0.0}  />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-neutral-100)" />
-                      <XAxis 
-                        dataKey="day" 
-                        stroke="var(--text-muted)" 
-                        fontSize={11} 
-                        tickLine={false}
-                        axisLine={false}
+                      <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                      <YAxis domain={[1, 5]} ticks={[1,2,3,4,5]} stroke="var(--text-muted)" fontSize={14} tickLine={false} axisLine={false}
+                        tickFormatter={(tick) => ({ 1:'😢', 2:'😔', 3:'😐', 4:'😊', 5:'😄' })[tick] || tick}
                       />
-                      <YAxis 
-                        domain={[1, 5]} 
-                        ticks={[1, 2, 3, 4, 5]} 
-                        stroke="var(--text-muted)" 
-                        fontSize={14} 
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(tick) => {
-                          const emojis = { 1: '😢', 2: '😔', 3: '😐', 4: '😊', 5: '😄' };
-                          return emojis[tick] || tick;
-                        }}
+                      <Tooltip
+                        contentStyle={{ background:'var(--surface-card)', border:'1.5px solid var(--color-neutral-200)', borderRadius:'16px', boxShadow:'var(--shadow-md)', color:'var(--text-primary)', fontFamily:'var(--font-sans)', fontSize:'0.85rem' }}
+                        formatter={(v) => [({ 1:'😢 Very Sad', 2:'😔 Sad', 3:'😐 Okay', 4:'😊 Good', 5:'😄 Great' })[v] || v, 'Mood']}
                       />
-                      <Tooltip 
-                        contentStyle={{ 
-                          background: 'var(--surface-card)', 
-                          border: '1.5px solid var(--color-neutral-200)', 
-                          borderRadius: '16px', 
-                          boxShadow: 'var(--shadow-md)',
-                          color: 'var(--text-primary)',
-                          fontFamily: 'var(--font-sans)',
-                          fontSize: '0.85rem'
-                        }}
-                        formatter={(value) => {
-                          const labels = { 1: '😢 Very Sad', 2: '😔 Sad', 3: '😐 Okay', 4: '😊 Good', 5: '😄 Great' };
-                          return [labels[value] || value, 'Mood'];
-                        }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="mood_score" 
-                        stroke="var(--color-primary-500)" 
-                        strokeWidth={3}
-                        fillOpacity={1}
-                        fill="url(#moodAreaGrad)"
-                        dot={{ fill: 'var(--color-primary-500)', stroke: '#fff', strokeWidth: 2, r: 5 }}
-                        activeDot={{ r: 7, strokeWidth: 0 }} 
+                      <Area type="monotone" dataKey="mood_score" stroke="var(--color-primary-500)" strokeWidth={3} fillOpacity={1} fill="url(#moodAreaGrad)"
+                        dot={{ fill:'var(--color-primary-500)', stroke:'#fff', strokeWidth:2, r:5 }} activeDot={{ r:7, strokeWidth:0 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
+
+              {/* ── Personalised Insight Card ───────────────────────────── */}
+              {(() => {
+                // ── Compute metrics from real timeline data ──────────────
+                const scores = timeline.map(d => d.mood_score).filter(Boolean);
+                const avg    = scores.length ? scores.reduce((a,b) => a+b, 0) / scores.length : 3;
+                const recent = scores.slice(-3);
+                const older  = scores.slice(0, Math.max(1, scores.length - 3));
+                const recentAvg = recent.length  ? recent.reduce((a,b)=>a+b,0)/recent.length  : avg;
+                const olderAvg  = older.length   ? older.reduce((a,b)=>a+b,0)/older.length   : avg;
+                const trend  = recentAvg > olderAvg + 0.4 ? 'improving'
+                             : recentAvg < olderAvg - 0.4 ? 'declining' : 'stable';
+                const topTag = tagData[0]?.name || null;
+
+                // ── Pick the right insight ───────────────────────────────
+                let icon, title, message, tip, gradient, borderColor;
+
+                if (avg >= 4.2) {
+                  icon = '🌟'; borderColor = '#22c55e'; gradient = 'linear-gradient(135deg,rgba(34,197,94,0.08),rgba(16,185,129,0.04))';
+                  title = trend === 'improving' ? 'You\'re on a roll!' : trend === 'declining' ? 'Small dip — you\'ve bounced before!' : 'You\'re thriving! 🌿';
+                  message = trend === 'declining'
+                    ? `Your overall mood has been excellent, but the last few days show a slight dip${topTag ? ` — possibly around "${topTag}"` : ''}. A small slip after a peak is completely normal.`
+                    : `Your average mood score of ${avg.toFixed(1)}/5 is outstanding! ${topTag ? `Even when "${topTag}" shows up, you're managing beautifully.` : 'You are managing life with real grace.'}`;
+                  tip = '💡 Keep doing what you\'re doing — your routines are clearly working.';
+                } else if (avg >= 3.2) {
+                  icon = '😊'; borderColor = '#3b82f6'; gradient = 'linear-gradient(135deg,rgba(59,130,246,0.08),rgba(99,102,241,0.04))';
+                  title = trend === 'improving' ? 'Things are looking up! 📈' : trend === 'declining' ? 'A gentle check-in 💙' : 'Steady and grounded 🌊';
+                  message = trend === 'improving'
+                    ? `Your recent moods are noticeably better than before — great progress! ${topTag ? `Managing "${topTag}" seems to be getting easier.` : ''}`
+                    : trend === 'declining'
+                    ? `Your mood has been dipping slightly recently${topTag ? `, and "${topTag}" keeps appearing` : ''}. It's okay to slow down and reach out.`
+                    : `You're maintaining a balanced emotional state (avg ${avg.toFixed(1)}/5). Life isn't always peaks — steady is strong.`;
+                  tip = trend === 'declining' ? '💡 Try a 5-minute breathing exercise today — it really helps.' : '💡 Journal one good thing that happened today to anchor the positive.';
+                } else if (avg >= 2.2) {
+                  icon = '🌧️'; borderColor = '#f59e0b'; gradient = 'linear-gradient(135deg,rgba(245,158,11,0.10),rgba(251,191,36,0.04))';
+                  title = trend === 'improving' ? 'The clouds are parting ☀️' : trend === 'declining' ? 'You\'re carrying a lot right now' : 'You\'re going through a rough patch';
+                  message = trend === 'improving'
+                    ? `Your recent moods show real improvement — you're climbing out of a tough stretch. ${topTag ? `"${topTag}" has been a challenge, but you're pushing through.` : ''} Keep going!`
+                    : `Your average mood has been low (${avg.toFixed(1)}/5)${topTag ? `, and "${topTag}" is your most common stressor` : ''}. You don't have to handle this alone.`;
+                  tip = '💡 Talk to Saathi — even a short conversation can lighten the load.';
+                } else {
+                  icon = '💜'; borderColor = '#a855f7'; gradient = 'linear-gradient(135deg,rgba(168,85,247,0.12),rgba(99,102,241,0.06))';
+                  title = trend === 'improving' ? 'You\'re fighting back — proud of you 💪' : 'Saathi is here with you 🤝';
+                  message = `Your moods have been difficult lately (avg ${avg.toFixed(1)}/5)${topTag ? ` — "${topTag}" seems to be weighing heavily on you` : ''}. This takes real courage to face. You are not alone.`;
+                  tip = '💡 Please reach out — to Saathi, a trusted adult, or KIRAN helpline 1800-599-0019 (free, 24/7).';
+                }
+
+                return (
+                  <div style={{
+                    marginBottom: '1.5rem',
+                    borderRadius: '20px',
+                    border: `2px solid ${borderColor}`,
+                    background: gradient,
+                    padding: '20px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    boxShadow: `0 8px 32px ${borderColor}22`,
+                  }}>
+                    {/* Glow orb */}
+                    <div style={{ position:'absolute', top:'-30px', right:'-30px', width:'100px', height:'100px', borderRadius:'50%', background:`radial-gradient(circle, ${borderColor}30, transparent 70%)`, pointerEvents:'none' }} />
+
+                    {/* Header */}
+                    <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'12px' }}>
+                      <span style={{ fontSize:'2rem', lineHeight:1, filter:`drop-shadow(0 2px 6px ${borderColor}55)` }}>{icon}</span>
+                      <div>
+                        <p style={{ fontSize:'0.7rem', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.08em', color:borderColor, margin:0 }}>Saathi's Insight for You</p>
+                        <h3 style={{ margin:0, fontSize:'1rem', fontWeight:'800', color:'var(--text-primary)', lineHeight:1.2 }}>{title}</h3>
+                      </div>
+                    </div>
+
+                    {/* Stats row */}
+                    <div style={{ display:'flex', gap:'10px', marginBottom:'12px' }}>
+                      {[
+                        { label:'Avg Mood', val:`${avg.toFixed(1)}/5` },
+                        { label:'Trend',    val: trend === 'improving' ? '↑ Rising' : trend === 'declining' ? '↓ Dipping' : '→ Stable' },
+                        ...(topTag ? [{ label:'Top Stressor', val: topTag }] : []),
+                      ].map(s => (
+                        <div key={s.label} style={{ flex:1, background:'rgba(255,255,255,0.45)', borderRadius:'12px', padding:'8px 10px', textAlign:'center' }}>
+                          <p style={{ margin:0, fontSize:'0.62rem', color:'var(--text-muted)', fontWeight:'600', textTransform:'uppercase' }}>{s.label}</p>
+                          <p style={{ margin:0, fontSize:'0.82rem', color:'var(--text-primary)', fontWeight:'700' }}>{s.val}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Message */}
+                    <p style={{ margin:'0 0 10px', fontSize:'0.88rem', color:'var(--text-secondary)', lineHeight:'1.6' }}>{message}</p>
+
+                    {/* Tip */}
+                    <p style={{ margin:'0 0 14px', fontSize:'0.82rem', color:'var(--text-muted)', fontStyle:'italic', lineHeight:'1.5', background:'rgba(255,255,255,0.35)', borderRadius:'10px', padding:'8px 12px' }}>{tip}</p>
+
+                    {/* CTA */}
+                    <button
+                      onClick={() => navigate('/chat')}
+                      style={{ background:`linear-gradient(135deg, ${borderColor}, ${borderColor}cc)`, color:'white', border:'none', borderRadius:'50px', padding:'9px 20px', fontSize:'0.83rem', fontWeight:'700', cursor:'pointer', display:'flex', alignItems:'center', gap:'6px', boxShadow:`0 4px 14px ${borderColor}44` }}
+                    >
+                      💬 Talk to Saathi →
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* Common Stressors Premium Horizontal Bar Chart */}
               {tagData.length > 0 && (
@@ -389,7 +463,7 @@ export default function MoodDashboard() {
                           fontSize={13} 
                           tickLine={false}
                           axisLine={false}
-                          width={80}
+                          width={120}
                         />
                         <Tooltip 
                           cursor={{ fill: 'rgba(139, 111, 212, 0.05)', radius: 8 }}

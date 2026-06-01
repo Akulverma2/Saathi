@@ -14,43 +14,70 @@ const MoodDashboard = React.lazy(() => import('./components/MoodTracker/MoodDash
 const SignIn = React.lazy(() => import('./components/Auth/SignIn'));
 const SignUp = React.lazy(() => import('./components/Auth/SignUp'));
 
-import { useTheme } from './contexts/ThemeContext';
+import { useTheme, FONT_OPTIONS } from './contexts/ThemeContext';
 import { api } from './services/apiClient';
+
+// ── Shared dropdown style used by Font & Language pickers ────────────────────
+const selectStyle = {
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  background: 'var(--surface-card)',
+  border: '1.5px solid var(--color-primary-300)',
+  borderRadius: '12px',
+  padding: '8px 36px 8px 14px',
+  fontSize: '0.88rem',
+  fontWeight: '600',
+  color: 'var(--color-primary-600)',
+  cursor: 'pointer',
+  outline: 'none',
+  minWidth: '155px',
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234f8b7a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 12px center',
+  boxShadow: '0 2px 8px rgba(79,139,122,0.12)',
+  transition: 'border-color 0.15s, box-shadow 0.15s',
+  flexShrink: 0,
+};
+
+// ── All 9 supported languages with native script names ───────────────────────
+const LANGUAGE_OPTIONS = [
+  { code: 'en', label: 'English',   native: 'English'    },
+  { code: 'hi', label: 'Hindi',     native: 'हिंदी'       },
+  { code: 'bn', label: 'Bengali',   native: 'বাংলা'      },
+  { code: 'te', label: 'Telugu',    native: 'తెలుగు'     },
+  { code: 'ta', label: 'Tamil',     native: 'தமிழ்'      },
+  { code: 'mr', label: 'Marathi',   native: 'मराठी'      },
+  { code: 'kn', label: 'Kannada',   native: 'ಕನ್ನಡ'     },
+  { code: 'gu', label: 'Gujarati',  native: 'ગુજરાતી'   },
+  { code: 'ur', label: 'Urdu',      native: 'اردو'       },
+];
 
 function ProfilePage() {
   const { user, logout, updatePreferences } = useAuth();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { theme, setTheme, customHue, setCustomHue, lowBandwidth, setLowBandwidth, calmMode, setCalmMode } = useTheme();
+  const { theme, setTheme, customHue, setCustomHue, lowBandwidth, setLowBandwidth, calmMode, setCalmMode, fontId, setFontId } = useTheme();
 
   const [editing, setEditing] = useState(false);
   const [newNickname, setNewNickname] = useState('');
-  const [newLang, setNewLang] = useState('en');
+  const [newLang, setNewLang] = useState(() => localStorage.getItem('saathi_lang') || 'en');
   const [newVoice, setNewVoice] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [customApiKey, setCustomApiKeyState] = useState(() => localStorage.getItem('saathi_custom_gemini_key') || '');
 
-  const languages = [
-    { code: 'en', label: 'English' },
-    { code: 'hi', label: 'हिंदी' },
-    { code: 'bn', label: 'বাংলা' },
-    { code: 'te', label: 'తెలుగు' },
-    { code: 'ta', label: 'தமிழ்' },
-    { code: 'mr', label: 'मराठी' },
-    { code: 'kn', label: 'ಕನ್ನಡ' },
-    { code: 'gu', label: 'ગુજરાતી' },
-    { code: 'ur', label: 'اردو' }
-  ];
+  // language list is now the module-level LANGUAGE_OPTIONS constant
 
   // Sync state with loaded user profile
   useEffect(() => {
     if (user) {
       setNewNickname(user.nickname || '');
-      setNewLang(user.language || 'en');
+      // Prefer the live i18n language (set by the Display Settings picker),
+      // then fall back to the saved profile language
+      setNewLang(i18n.language || user.language || localStorage.getItem('saathi_lang') || 'en');
       setNewVoice(user.voice_preference ? true : false);
     }
-  }, [user]);
+  }, [user, i18n.language]);
 
   const handleLogout = () => {
     logout();
@@ -364,9 +391,9 @@ function ProfilePage() {
             gap: '8px'
           }}>
             <div style={{ fontSize: '1.6rem', margin: 0 }}>🔒</div>
-            <h3 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>Lock In Your History</h3>
+            <h3 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>{t('lock_in_history', 'Lock In Your History')}</h3>
             <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-              Create a permanent account to secure your wellness logs and chats across devices forever.
+              {t('lock_in_history_sub', 'Create a permanent account to secure your wellness logs and chats across devices forever.')}
             </p>
             <button 
               className="btn btn-primary" 
@@ -380,7 +407,7 @@ function ProfilePage() {
                 cursor: 'pointer'
               }}
             >
-              🔑 Secure My Account
+              🔑 {t('secure_account', 'Secure My Account')}
             </button>
           </div>
         )}
@@ -391,24 +418,24 @@ function ProfilePage() {
             // Info Display
             <div>
               <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--text-primary)', fontWeight: '700', borderBottom: '1.5px solid rgba(255,255,255,0.08)', paddingBottom: '6px' }}>
-                📋 Profile Information
+                📋 {t('profile_info', 'Profile Information')}
               </h3>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: '500' }}>👤 Nickname:</span>
+                  <span style={{ fontWeight: '500' }}>👤 {t('nickname', 'Nickname')}:</span>
                   <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{user?.nickname || 'Friend'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: '500' }}>🌐 Language:</span>
+                  <span style={{ fontWeight: '500' }}>🌐 {t('language', 'Language')}:</span>
                   <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
-                    {languages.find(l => l.code === user?.language)?.label || 'English'}
+                    {LANGUAGE_OPTIONS.find(l => l.code === (i18n.language || user?.language))?.native || 'English'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: '500' }}>🎙️ Voice Support:</span>
+                  <span style={{ fontWeight: '500' }}>🎙️ {t('voice_responses', 'Voice Support')}:</span>
                   <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
-                    {user?.voice_preference ? 'Enabled 🎙️' : 'Disabled ⌨️'}
+                    {user?.voice_preference ? t('voice_enabled', 'Enabled 🎙️') : t('voice_disabled', 'Disabled ⌨️')}
                   </span>
                 </div>
               </div>
@@ -426,22 +453,22 @@ function ProfilePage() {
                   border: '1.5px solid rgba(255,255,255,0.1)'
                 }}
               >
-                ✏️ Edit Information
+                ✏️ {t('edit_info', 'Edit Information')}
               </button>
             </div>
           ) : (
             // Info Form Editor
             <form onSubmit={saveProfileInfo} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem', color: 'var(--text-primary)', fontWeight: '700' }}>
-                ✏️ Edit Details
+                ✏️ {t('edit_details', 'Edit Details')}
               </h3>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Nickname</label>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>{t('nickname', 'Nickname')}</label>
                 <input 
                   type="text"
                   className="input"
-                  placeholder="What should Saathi call you?"
+                  placeholder={t('what_is_your_name', 'What should Saathi call you?')}
                   value={newNickname}
                   onChange={(e) => setNewNickname(e.target.value)}
                   style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '12px', padding: '10px' }}
@@ -449,30 +476,28 @@ function ProfilePage() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Preferred Language</label>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>{t('language', 'Preferred Language')}</label>
                 <select
                   value={newLang}
                   onChange={(e) => setNewLang(e.target.value)}
                   style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    borderRadius: '12px',
-                    padding: '10px',
-                    color: 'white',
-                    border: '1.5px solid rgba(255,255,255,0.15)',
+                    ...selectStyle,
+                    minWidth: 'unset',
+                    width: '100%',
+                    padding: '10px 36px 10px 14px',
                     fontSize: '0.9rem',
-                    outline: 'none'
                   }}
                 >
-                  {languages.map((l) => (
-                    <option key={l.code} value={l.code} style={{ background: '#1e293b', color: 'white' }}>
-                      {l.label}
+                  {LANGUAGE_OPTIONS.map((l) => (
+                    <option key={l.code} value={l.code}>
+                      {l.native} — {l.label}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>🎙️ Voice Responses</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>🎙️ {t('voice_responses', 'Voice Responses')}</span>
                 <input 
                   type="checkbox"
                   checked={newVoice}
@@ -488,14 +513,14 @@ function ProfilePage() {
                   onClick={() => setEditing(false)}
                   style={{ flex: 1, padding: '10px', fontSize: '0.85rem', cursor: 'pointer' }}
                 >
-                  Cancel
+                  {t('cancel', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
                   style={{ flex: 1, padding: '10px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}
                 >
-                  💾 Save Details
+                  💾 {t('save', 'Save Details')}
                 </button>
               </div>
             </form>
@@ -505,12 +530,12 @@ function ProfilePage() {
         {/* Device Modes and Custom System Toggles */}
         <div className="card" style={{ marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.1rem', padding: '1.25rem' }}>
           <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)', fontWeight: '700', borderBottom: '1.5px solid rgba(255,255,255,0.08)', paddingBottom: '6px' }}>
-            ⚙️ Display Settings
+            ⚙️ {t('display_settings', 'Display Settings')}
           </h3>
           
           {/* Theme Selector Options */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '600' }}>🎨 Theme Option</span>
+            <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '600' }}>🎨 {t('theme_option', 'Theme Option')}</span>
             <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
               {['light', 'dark', 'customized'].map((tOpt) => {
                 const isSelected = theme === tOpt;
@@ -535,7 +560,7 @@ function ProfilePage() {
                       outline: 'none'
                     }}
                   >
-                    {tOpt === 'customized' ? '🎨 Custom' : tOpt === 'light' ? '☀️ Light' : '🌙 Dark'}
+                    {tOpt === 'customized' ? `🎨 ${t('theme_custom', 'Custom')}` : tOpt === 'light' ? `☀️ ${t('theme_light', 'Light')}` : `🌙 ${t('theme_dark', 'Dark').replace(' Mode', '')}`}
                   </button>
                 );
               })}
@@ -554,7 +579,7 @@ function ProfilePage() {
               border: '1px solid var(--color-neutral-200)'
             }}>
               <span style={{ fontSize: '0.82rem', color: 'var(--text-primary)', fontWeight: '600', display: 'flex', justifyContent: 'space-between' }}>
-                <span>🎯 Select Custom Color Accent</span>
+                <span>🎯 {t('select_color_accent', 'Select Custom Color Accent')}</span>
                 <span style={{ color: 'var(--color-primary-500)', fontWeight: 'bold' }}>Hue: {customHue}°</span>
               </span>
 
@@ -617,16 +642,16 @@ function ProfilePage() {
             borderTop: '1px solid rgba(255,255,255,0.08)' 
           }}>
             <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              🔑 Custom Gemini API Key
+              🔑 {t('custom_api_key_title', 'Custom Gemini API Key')}
             </span>
             <p style={{ margin: 0, fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-              If the default AI chat runs out of daily quota (quota exceeded error), paste your own free Gemini API key below to restore active chat instantly.
+              {t('custom_api_key_sub', 'If the default AI chat runs out of daily quota (quota exceeded error), paste your own free Gemini API key below to restore active chat instantly.')}
             </p>
             <div style={{ display: 'flex', gap: '8px' }}>
               <input 
                 type="password"
                 className="input"
-                placeholder="Paste AIzaSy... API key"
+                placeholder={t('custom_api_key_placeholder', 'Paste AIzaSy... API key')}
                 value={customApiKey}
                 onChange={(e) => {
                   const val = e.target.value.trim();
@@ -659,20 +684,20 @@ function ProfilePage() {
                     border: '1.5px solid var(--color-danger)'
                   }}
                 >
-                  Clear
+                  {t('clear', 'Clear')}
                 </button>
               )}
             </div>
             {customApiKey && (
               <span style={{ fontSize: '0.72rem', color: 'var(--color-success)', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                ✨ Active Key Saved Locally! Saathi is ready to chat.
+                ✨ {t('api_key_saved', 'Active Key Saved Locally! Saathi is ready to chat.')}
               </span>
             )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '6px' }}>
             <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '500' }}>📶 Low Bandwidth Mode (Fast)</span>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '500' }}>📶 {t('low_bandwidth', 'Low Bandwidth Mode (Fast)')}</span>
               <input 
                 type="checkbox" 
                 checked={lowBandwidth} 
@@ -681,7 +706,7 @@ function ProfilePage() {
               />
             </label>
             <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '500' }}>🧘 Calm UI Mode</span>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '500' }}>🧘 {t('calm_mode', 'Calm UI Mode')}</span>
               <input 
                 type="checkbox" 
                 checked={calmMode} 
@@ -689,6 +714,75 @@ function ProfilePage() {
                 style={{ width: '22px', height: '22px', accentColor: 'var(--color-primary-500)', cursor: 'pointer' }}
               />
             </label>
+          </div>
+
+          {/* ── Font Style — single dropdown row ── */}
+          <div style={{
+            paddingTop: '10px',
+            borderTop: '1.5px solid rgba(255,255,255,0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '600' }}>
+                🔤 {t('font_style', 'Font Style')}
+              </span>
+              <span style={{
+                fontSize: '0.74rem',
+                color: 'var(--text-muted)',
+                fontFamily: FONT_OPTIONS.find(f => f.id === fontId)?.stack,
+              }}>
+                {FONT_OPTIONS.find(f => f.id === fontId)?.label}
+              </span>
+            </div>
+
+            <select
+              value={fontId}
+              onChange={e => setFontId(e.target.value)}
+              style={selectStyle}
+            >
+              {FONT_OPTIONS.map(f => (
+                <option key={f.id} value={f.id}>
+                  {f.label} — {f.category}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* ── Language — single dropdown row ── */}
+          <div style={{
+            paddingTop: '10px',
+            borderTop: '1.5px solid rgba(255,255,255,0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: '600' }}>
+                🌐 Language
+              </span>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                {LANGUAGE_OPTIONS.find(l => l.code === i18n.language)?.native || 'English'}
+              </span>
+            </div>
+
+            <select
+              value={i18n.language}
+              onChange={e => {
+                i18n.changeLanguage(e.target.value);
+                localStorage.setItem('saathi_lang', e.target.value);
+              }}
+              style={selectStyle}
+            >
+              {LANGUAGE_OPTIONS.map(l => (
+                <option key={l.code} value={l.code}>
+                  {l.native} — {l.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -709,7 +803,7 @@ function ProfilePage() {
                 cursor: 'pointer'
               }}
             >
-              🚪 Sign Out Safely
+              🚪 {t('sign_out', 'Sign Out / Reset')}
             </button>
             <button 
               className="btn btn-danger btn-full" 

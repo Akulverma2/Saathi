@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../hooks/useChat';
@@ -10,6 +11,17 @@ export default function ChatView() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { messages, loading, crisisLevel, dismissCrisis, sendMessage, bottomRef } = useChat(i18n.language);
+
+  // Auto-send pending mood message set by the daily welcome popup
+  useEffect(() => {
+    const pending = sessionStorage.getItem('saathi_pending_mood_msg');
+    if (pending) {
+      sessionStorage.removeItem('saathi_pending_mood_msg');
+      // Small delay so chat is fully mounted before sending
+      const t = setTimeout(() => sendMessage(pending), 600);
+      return () => clearTimeout(t);
+    }
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="chat-view">
