@@ -243,9 +243,22 @@ h4 { font-size: var(--font-size-md);  font-weight: 500; }
 p  { color: var(--text-secondary); }
 
 /* ── Scrollbar ──────────────────────────────── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-primary-200); border-radius: var(--radius-full); }
+body::-webkit-scrollbar,
+.app-main::-webkit-scrollbar,
+textarea::-webkit-scrollbar {
+  width: 4px;
+}
+body::-webkit-scrollbar-track,
+.app-main::-webkit-scrollbar-track,
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+body::-webkit-scrollbar-thumb,
+.app-main::-webkit-scrollbar-thumb,
+textarea::-webkit-scrollbar-thumb {
+  background: var(--color-primary-200);
+  border-radius: var(--radius-full);
+}
 
 /* ── Focus ──────────────────────────────────── */
 :focus-visible { outline: 2px solid var(--color-primary-400); outline-offset: 2px; border-radius: var(--radius-sm); }
@@ -378,6 +391,20 @@ p  { color: var(--text-secondary); }
   box-shadow: 0 0 0 4px rgba(79,139,122,0.25), inset 0 2px 4px rgba(0,0,0,0.2);
 }
 .input::placeholder { color: var(--text-muted); }
+
+/* ── Select & Option Accessibility Fix ──────── */
+select option {
+  background-color: var(--surface-bg) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="dark"] select option {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+[data-theme="customized"] select option {
+  background-color: #faf4ee !important;
+  color: #4e2e1a !important;
+}
 
 /* ── Badge ──────────────────────────────────── */
 .badge {

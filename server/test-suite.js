@@ -9,9 +9,9 @@ const runTests = async () => {
   let passed = 0;
   let failed = 0;
 
-  const test = (name, fn) => {
+  const test = async (name, fn) => {
     try {
-      fn();
+      await fn();
       console.log(`✅ TEST PASSED: ${name}`);
       passed++;
     } catch (err) {
@@ -22,29 +22,29 @@ const runTests = async () => {
   };
 
   // 1. Crisis Detection tests
-  test('Crisis detector matches Level 3 severe risks', () => {
+  await test('Crisis detector matches Level 3 severe risks', () => {
     const result = detectCrisisLevel('I want to end my life and commit suicide');
     assert.strictEqual(result.level, 3);
     assert.strictEqual(result.requiresImmediate, true);
   });
 
-  test('Crisis detector matches Level 1 mild stressors', () => {
+  await test('Crisis detector matches Level 1 mild stressors', () => {
     const result = detectCrisisLevel('I am very stressed about exams and feeling lonely');
     assert.strictEqual(result.level, 1);
     assert.strictEqual(result.requiresImmediate, false);
     assert.strictEqual(result.requiresEscalation, false);
   });
 
-  test('Crisis detector returns Level 0 for normal conversation', () => {
+  await test('Crisis detector returns Level 0 for normal conversation', () => {
     const result = detectCrisisLevel('Hello! Can you help me plan a study schedule?');
     assert.strictEqual(result.level, 0);
     assert.strictEqual(result.requiresImmediate, false);
   });
 
   // 2. Database Emulator/CRUD tests
-  test('Database mock returns statements and operates in-memory', async () => {
+  await test('Database mock returns statements and operates in-memory', async () => {
     const db = getDB();
-    const testUserId = 'test_user_123';
+    const testUserId = `test_user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     
     // Insert mock user
     await db.prepare('INSERT INTO users (id, nickname, language, voice_preference) VALUES (?, ?, ?, ?)')
@@ -56,6 +56,9 @@ const runTests = async () => {
     assert.ok(user);
     assert.strictEqual(user.id, testUserId);
     assert.strictEqual(user.nickname, 'Tester');
+
+    // Clean up database after test
+    await db.deleteUserAndData(testUserId);
   });
 
   console.log('\n--- Test Suite Summary ---');
