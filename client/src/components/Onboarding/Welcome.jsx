@@ -147,22 +147,34 @@ export default function Welcome() {
               width: '40px',
               height: '40px',
               borderRadius: '50%',
-              background: 'rgba(120, 120, 120, 0.15)',
-              border: '1.5px solid var(--color-neutral-300)',
-              color: 'var(--text-primary)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1.5px solid rgba(255, 255, 255, 0.25)',
+              color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
               transition: 'all 0.2s',
-              fontSize: '1.2rem',
               backdropFilter: 'blur(10px)',
               outline: 'none',
               zIndex: 10
             }}
-            title="Change Language"
+            title={t('back')}
           >
-            ←
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ display: 'block' }}
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
           </button>
 
           <div className="onboarding-logo" style={{ marginTop: 'var(--space-6)', marginBottom: '0' }}>
