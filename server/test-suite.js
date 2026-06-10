@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import assert from 'assert';
 import { detectCrisisLevel } from './services/crisisDetector.js';
+import { getLocalFallbackResponse } from './services/aiService.js';
 import { getDB } from './models/database.js';
 
 // Setup basic test cases
@@ -28,6 +29,12 @@ const runTests = async () => {
     assert.strictEqual(result.requiresImmediate, true);
   });
 
+  await test('Crisis detector corrects typos like "suiced" to "suicide" and matches Level 3', () => {
+    const result = detectCrisisLevel('I want to end my life and commit suiced');
+    assert.strictEqual(result.level, 3);
+    assert.strictEqual(result.requiresImmediate, true);
+  });
+
   await test('Crisis detector matches Level 1 mild stressors', () => {
     const result = detectCrisisLevel('I am very stressed about exams and feeling lonely');
     assert.strictEqual(result.level, 1);
@@ -39,6 +46,12 @@ const runTests = async () => {
     const result = detectCrisisLevel('Hello! Can you help me plan a study schedule?');
     assert.strictEqual(result.level, 0);
     assert.strictEqual(result.requiresImmediate, false);
+  });
+
+  await test('Fallback engine corrects typo "godd" to "good" and returns happy response', () => {
+    const response = getLocalFallbackResponse('just feeling godd now', 'en');
+    // Happy response contains "makes me so incredibly happy" or similar
+    assert.ok(response.includes('happy') || response.includes('special'));
   });
 
   // 2. Database Emulator/CRUD tests

@@ -51,10 +51,99 @@ const CRISIS_PATTERNS = {
   },
 };
 
+export function normalizeText(text) {
+  if (!text || typeof text !== 'string') return '';
+  
+  let normalized = text.toLowerCase().trim();
+
+  // 1. Remove excessive repeated characters (e.g., "goooood" -> "good", "sadddd" -> "sad")
+  // Collapses 3+ repeated characters to 2: e.g., "ooo" -> "oo", "ddd" -> "d"
+  normalized = normalized.replace(/(.)\1{2,}/g, '$1$1');
+
+  // 2. Map common typos/slang to canonical keywords
+  const typoMap = {
+    // Happy / Good
+    'godd': 'good',
+    'gud': 'good',
+    'goodd': 'good',
+    'hapy': 'happy',
+    'happi': 'happy',
+    'happey': 'happy',
+    'hppy': 'happy',
+    'awsum': 'awesome',
+    'awsome': 'awesome',
+    'exited': 'excited',
+    'grt': 'great',
+    'graet': 'great',
+
+    // Sad / Lonely
+    'sadd': 'sad',
+    'lonly': 'lonely',
+    'lonli': 'lonely',
+    'depresed': 'depressed',
+    'depres': 'depressed',
+    'hurted': 'hurt',
+    'confusd': 'confused',
+
+    // Greetings
+    'helo': 'hello',
+    'hellow': 'hello',
+    'hallo': 'hello',
+    'hii': 'hi',
+    'hiii': 'hi',
+    'heyy': 'hey',
+    'heyyy': 'hey',
+    'hlo': 'hello',
+
+    // Crisis / Stress
+    'suiced': 'suicide',
+    'suicid': 'suicide',
+    'sucide': 'suicide',
+    'suiside': 'suicide',
+    'selfharm': 'self harm',
+    'anxous': 'anxious',
+    'anxios': 'anxious',
+    'tention': 'tension',
+    'stres': 'stress',
+    'exm': 'exam',
+    'stdy': 'study',
+
+    // Wellness / Physical
+    'perod': 'period',
+    'pirod': 'period',
+    'cramps': 'cramp',
+    'tiredd': 'tired',
+    'tred': 'tired',
+    'slep': 'sleep',
+    'sleepp': 'sleep',
+    'headach': 'headache',
+
+    // Hinglish / Hindi
+    'khus': 'khush',
+    'acha': 'achha',
+    'thik': 'theek',
+    'kasa': 'kaise',
+    'keise': 'kaise',
+    'udass': 'udas',
+    'akelaa': 'akela',
+    'tashan': 'tension',
+    'tensen': 'tension',
+    'studdi': 'study'
+  };
+
+  // Replace whole words or parts of words matching the typos using word boundary
+  for (const [typo, correction] of Object.entries(typoMap)) {
+    const regex = new RegExp(`\\b${typo}\\b`, 'g');
+    normalized = normalized.replace(regex, correction);
+  }
+
+  return normalized;
+}
+
 export function detectCrisisLevel(text) {
   if (!text || typeof text !== 'string') return { level: 0, keywords: [] };
 
-  const lowerText = text.toLowerCase();
+  const lowerText = normalizeText(text);
   const matchedKeywords = [];
   let maxLevel = 0;
 

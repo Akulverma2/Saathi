@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { buildSystemPrompt } from '../config/systemPrompt.js';
-import { detectCrisisLevel } from './crisisDetector.js';
+import { detectCrisisLevel, normalizeText } from './crisisDetector.js';
 
 const safetySettings = [
   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
@@ -225,13 +225,19 @@ Output only your 2-sentence response.`;
 
 // Highly detailed emotionally intelligent
 export function getLocalFallbackResponse(text, language = 'en') {
-  const lowerText = text.toLowerCase().trim();
+  const lowerText = normalizeText(text);
 
   // Parse negations to avoid matching positive keywords when negated (e.g. "not feeling good")
   const hasNegation = [
     'not', 'no', 'never', 'don\'t', 'dont', 'bad', 'unhappy', 'sad', 'down', 'upset',
     'नहीं', 'ना', 'मत', 'कम'
-  ].some(negation => lowerText.includes(negation));
+  ].some(negation => {
+    if (/^[a-zA-Z' ]+$/.test(negation)) {
+      const escaped = negation.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escaped}\\b`, 'i').test(lowerText);
+    }
+    return lowerText.includes(negation);
+  });
 
   // 1. Level 3 Suicide/Abuse Safety
   const isLevel3 = [
