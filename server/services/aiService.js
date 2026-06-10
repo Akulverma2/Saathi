@@ -335,6 +335,19 @@ export function getLocalFallbackResponse(text, language = 'en') {
       : "That makes me so incredibly happy to hear! 🌟 Celebrating your joy and positive moments is just as important. What made today feel so special? I'd love to hear! 🌸";
   }
 
+  // 5.8. "How are you" Check-ins
+  const isHowAreYou = [
+    'how are you', 'how r u', 'how are u', 'how you doing', 'how do you do', 'how is it going',
+    'kaise ho', 'kaise hain', 'aap kaise ho', 'aap kaise hain',
+    'कैसे हो', 'कैसे हैं', 'आप कैसे हो', 'आप कैसे हैं'
+  ].some(keyword => lowerText.includes(keyword));
+
+  if (isHowAreYou) {
+    return language === 'hi'
+      ? "मैं बिल्कुल ठीक हूँ, पूछने के लिए धन्यवाद! आप कैसी हैं और आज आपका दिन कैसा चल रहा है? 🌸"
+      : "I am fine, how about you? How are you feeling today? 🌸";
+  }
+
   // 6. Basic Greetings & Check-ins
   const isGreeting = [
     'hi', 'hello', 'hlo', 'hey', 'namaste', 'suno', 'yaar',
