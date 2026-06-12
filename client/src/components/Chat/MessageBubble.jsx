@@ -192,7 +192,6 @@ export default function MessageBubble({ message }) {
             </button>
           )}
           <span className="message-time">{timeString}</span>
-          {isUser && !message.synced && <span className="message-time" title="Pending sync">⏳</span>}
         </div>
       </div>
 
