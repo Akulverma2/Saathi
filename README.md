@@ -2,6 +2,10 @@
 
 Project Saathi is an AI-powered Progressive Web App (PWA) designed to support mental wellness for rural teens through empathetic AI conversations, mood tracking, multilingual accessibility, and offline-first support.
 
+### 🔗 Live Deployments
+- **Web Frontend**: [https://saathi-pied.vercel.app](https://saathi-pied.vercel.app)
+- **API Backend**: [https://saathi-4uej.onrender.com/api/health](https://saathi-4uej.onrender.com/api/health)
+
 ---
 
 ## 🌍 Problem Statement
@@ -55,6 +59,16 @@ Project Saathi aims to provide:
 - Background sync
 - Service Worker support
 - Installable mobile experience
+
+---
+
+## ❤️ What We Love About Project Saathi
+
+* **Empathetic AI Companion**: Powered by Gemini (`gemini-2.0-flash`) for delivering gentle, context-aware, and highly empathetic responses tailored for teen wellness.
+* **Offline-First Resilience**: Integrates IndexedDB and custom Service Workers so users can queue messages, record moods, and complete wellness activities offline.
+* **Multilingual & Accessible**: Native support for English, Hindi, and Urdu, catering directly to underserved regional communities.
+* **Soothing User Experience**: The interface features calming, curated colors, smooth transitions, and mindfulness tools like guided breathing exercises.
+* **Robust Backend**: Powered by Node.js, Express, and Supabase PostgreSQL with custom rate-limiting, guest session tokens, and security audits.
 
 ---
 
